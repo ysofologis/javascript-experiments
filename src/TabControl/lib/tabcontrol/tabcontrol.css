@@ -1,0 +1,55 @@
+/*----- Tabs -----*/
+.app-tabs {
+    width:100%;
+    display:inline-block;
+}
+
+.app-tabs .tab-links {
+}
+/*----- Tab Links -----*/
+/* Clearfix */
+
+.app-tabs .tab-links:after {
+    display:block;
+    clear:both;
+    content:'';
+}
+.app-tabs .tab-links li {
+    margin:0px 5px;
+    float:left;
+    list-style:none;
+}
+.app-tabs .tab-links a {
+    padding:9px 15px;
+    display:inline-block;
+    border-radius:3px 3px 0px 0px;
+    background:#7FB5DA;
+    font-size:16px;
+    font-weight:600;
+    color:#4c4c4c;
+    transition:all linear 0.15s;
+    font-family: sans-serif;
+}
+.app-tabs .tab-links a:hover {
+    background:#a7cce5;
+    text-decoration:none;
+}
+.app-tabs li.active a,
+.app-tabs li.active a:hover {
+    background:#fff;
+    color:#4c4c4c;
+}
+/*----- Content of Tabs -----*/
+.app-tabs .tab-content {
+    padding:15px;
+    border-radius:3px;
+    box-shadow:-1px 1px 1px rgba(0,0,0,0.15);
+    background:#fff;
+    font-family: sans-serif;
+}
+.app-tabs .tab-item {
+    display:none;
+}
+.app-tabs .tab-item.active {
+    display:block;
+}

@@ -1,0 +1,77 @@
+
+html, body {
+    height: 100%;
+    margin: 0;
+}
+
+.full-height {
+    height: 100%;
+}
+
+.mark-area {
+    border: solid 1px #aaa;
+}
+
+.page {
+    height: 100%;
+    width: 100%;
+    background-color: #fafafa;
+}
+
+.top-menu {
+    width: 100%;
+    background-color: #222;
+    color: #eee;
+    height: 35px;
+}
+
+.top-menu .menu-item {
+    float: left;
+    line-height: 35px;
+    vertical-align: middle;
+    font-family: sans-serif;
+    border-right: solid 1px #eee;
+    margin-right: 5px;
+}
+
+.page .column-10 {
+    float:left;
+    width: 10%;
+    height: 100%;
+}
+
+.page .column-20 {
+    float:left;
+    width: 20%;
+    height: 100%;
+}
+.page .column-25 {
+    float:left;
+    width: 25%;
+    height: 100%;
+}
+.page .column-30 {
+    float:left;
+    width: 30%;
+    height: 100%;
+}
+.page .column-40 {
+    float:left;
+    width: 40%;
+    height: 100%;
+}
+.page .column-50 {
+    float:left;
+    width: 50%;
+    height: 100%;
+}
+.page .column-60 {
+    float:left;
+    width: 60%;
+    height: 100%;
+}
+.page .column-80 {
+    float:left;
+    width: 80%;
+    height: 100%;
+}
