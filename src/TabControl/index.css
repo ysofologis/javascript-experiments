@@ -32,6 +32,8 @@ html, body {
     font-family: sans-serif;
     border-right: solid 1px #eee;
     margin-right: 5px;
+    width: 100px;
+    text-align: center;
 }
 
 .page .column-10 {

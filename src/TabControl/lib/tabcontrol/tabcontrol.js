@@ -1,6 +1,6 @@
 
 !function(global,$,undefined) {
-    const TAB_CONTAINER_CSS = 'app-tabs';
+    const TAB_CONTAINER_CSS = 'tabs';
     const TAB_HEADERS_CSS = 'tab-links';
     const TAB_CONTENT_CSS = 'tab-content';
     const TAB_ITEM_CSS = 'tab-item';
@@ -50,9 +50,11 @@
             var headerList = layoutSelector.find('.' + TAB_HEADERS_CSS);
             var headerItem = createElem('li', '');
             headerItem.id = 'h-{0}'.format(tabItem.tabId);
-            $(headerItem).append($('<a>{0}</a>'.format(tabItem.tabTitle)));
+            $(headerItem).append($('<div class="header"><div class="close">X</div><a class="text">{0}</a></div>'.format(tabItem.tabTitle)));
             headerList.append(headerItem);
-            $(headerItem).click(handleHeaderClick);
+            $(headerItem).find(".text").click(handleHeaderClick);
+            $(headerItem).find(".close").click(handleHeaderRemoveClick);
+
         };
         var doAddItem = function (descriptor) {
             var tabId = 'tab_{0}'.format( (_nextTabId ++).toString(10) );
@@ -87,8 +89,11 @@
                 if (prevTab) {
                     prevTab.tabNextId = tabItem.tabNextId;
                 }
-                if (tabItem.tabNextId) {
-                    doRemoveItem(tabItem.tabNextId);
+                var headerId = '#h-{0}'.format(tabId);
+                layoutSelector.find(headerId).remove();
+                if (prevTab && (_activeTab == tabItem)) {
+                    doRenderItem(prevTab);
+                    _activeTab = prevTab;
                 }
                 delete _tabItems[tabId];
             }
@@ -115,10 +120,14 @@
             }
         };
         function handleHeaderClick(evt) {
-            var tabId = evt.currentTarget.id.split('-')[1];
+            var tabId = evt.currentTarget.parentNode.parentNode.id.split('-')[1];
             var tabItem = _tabItems[tabId];
             doRenderItem(tabItem);
             _activeTab = tabItem;
+        }
+        function handleHeaderRemoveClick(evt) {
+            var tabId = evt.currentTarget.parentNode.parentNode.id.split('-')[1];
+            that.removeItem(tabId);
         }
         that.initLayout = function () {
             var tabContainer = createElem('div', TAB_CONTAINER_CSS);
@@ -140,14 +149,23 @@
             doRemoveItem(tabId);
             if (Object.keys(_tabItems).length == 0) {
                 _nextTabId = 0;
+                layoutSelector.find('.' + TAB_CONTENT_CSS).empty();
+            }
+        };
+        that.removeActiveItem = function () {
+            if (_activeTab) {
+                that.removeItem(_activeTab.tabId);
             }
         };
         that.activateItem = function (tabId) {
             var tabItem = _tabItems[tabId];
             if (tabItem) {
-                doRenderItem(_activeTab);
+                doRenderItem(tabItem);
                 _activeTab = tabItem;
             }
+        };
+        that.getActiveTab = function () {
+            return _activeTab;
         };
     };
     global.createTabControl = function (selector) {

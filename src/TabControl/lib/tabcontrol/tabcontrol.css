@@ -1,25 +1,30 @@
 /*----- Tabs -----*/
-.app-tabs {
+.tabs {
     width:100%;
     display:inline-block;
+    font-family: sans-serif;
 }
 
-.app-tabs .tab-links {
+.tab-links {
+    width: 100%;
+    margin-bottom: 0;
 }
+
 /*----- Tab Links -----*/
 /* Clearfix */
-
-.app-tabs .tab-links:after {
+.tab-links:after {
     display:block;
     clear:both;
     content:'';
 }
-.app-tabs .tab-links li {
+
+.tab-links li {
     margin:0px 5px;
     float:left;
     list-style:none;
 }
-.app-tabs .tab-links a {
+
+.tab-links .header {
     padding:9px 15px;
     display:inline-block;
     border-radius:3px 3px 0px 0px;
@@ -28,28 +33,45 @@
     font-weight:600;
     color:#4c4c4c;
     transition:all linear 0.15s;
-    font-family: sans-serif;
 }
-.app-tabs .tab-links a:hover {
+
+.tab-links .header:hover {
     background:#a7cce5;
     text-decoration:none;
 }
-.app-tabs li.active a,
-.app-tabs li.active a:hover {
+
+.tab-links .header > * {
+    display: inline-block;
+}
+
+.tab-links .header .close {
+    margin-right: 5px;
+    color: #999;
+    border: solid 1px #aaa;
+    padding: 5px;
+}
+.tab-links .header .close:hover {
+    border-color: dodgerblue;
+}
+
+.tab-links li.active .header,
+.tab-links li.active .header:hover {
     background:#fff;
     color:#4c4c4c;
 }
+
 /*----- Content of Tabs -----*/
-.app-tabs .tab-content {
+.tab-content {
     padding:15px;
     border-radius:3px;
     box-shadow:-1px 1px 1px rgba(0,0,0,0.15);
     background:#fff;
-    font-family: sans-serif;
 }
-.app-tabs .tab-item {
+
+.tab {
     display:none;
 }
-.app-tabs .tab-item.active {
+
+.tab.active {
     display:block;
 }
