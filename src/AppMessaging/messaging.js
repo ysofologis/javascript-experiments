@@ -7,7 +7,6 @@
 
     function AppMessaging() {
         var that = this;
-        var _listeners = [];
         var _started = false;
 
         var callListener = function(listener, payload) {
