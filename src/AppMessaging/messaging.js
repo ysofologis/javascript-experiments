@@ -10,7 +10,7 @@
         rootWindow[PROP_IS_ROOT] = true;
     }
 
-    var windowResolverFactory = function () {
+    var windowResolver= function () {
         var w = window;
         var isRoot = currentWindow[PROP_IS_ROOT] || false;
         return w;
@@ -22,7 +22,7 @@
         var _subscriptions = [];
 
         var callListener = function (listener, payload) {
-            var w = windowResolverFactory();
+            var w = windowResolver();
             w.setTimeout(function () {
                 listener.messageArrived(payload);
             }, 0);
@@ -68,8 +68,7 @@
         };
     }
 
-    var appMessaging = new AppMessaging();
-    global.appMessaging = global['appMessaging'] || appMessaging;
-    appMessaging.start();
+    global.appMessaging = global['appMessaging'] || new AppMessaging();
+    global.appMessaging.start();
 
 }(this);
