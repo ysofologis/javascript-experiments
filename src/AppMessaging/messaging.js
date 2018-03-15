@@ -1,25 +1,37 @@
 !function (global, undefined) {
+    const PROP_IS_ROOT = '__is_root__';
     var currentWindow = window;
     var rootWindow = window.parent ? window.parent : window.top;
+
     if (window.opener) {
         rootWindow = window.opener;
     }
+    if (!rootWindow[PROP_IS_ROOT]) {
+        rootWindow[PROP_IS_ROOT] = true;
+    }
+
+    var windowResolverFactory = function () {
+        var w = window;
+        var isRoot = currentWindow[PROP_IS_ROOT] || false;
+        return w;
+    };
 
     function AppMessaging() {
         var that = this;
         var _started = false;
         var _subscriptions = [];
 
-        var callListener = function(listener, payload) {
-            currentWindow.setTimeout(function () {
+        var callListener = function (listener, payload) {
+            var w = windowResolverFactory();
+            w.setTimeout(function () {
                 listener.messageArrived(payload);
-            },0);
+            }, 0);
         };
         var handleMessage = function (evt) {
             var msg = JSON.parse(evt.data);
-            for (var ix = 0; ix < _subscriptions.length; ix ++) {
+            for (var ix = 0; ix < _subscriptions.length; ix++) {
                 if (_subscriptions[ix].messageType == msg.messageType)
-                callListener(_subscriptions[ix].listener, msg.payload);
+                    callListener(_subscriptions[ix].listener, msg.payload);
             }
         };
         that.broadcastMessage = function (messageType, message) {
@@ -36,13 +48,13 @@
         };
         that.unsubscribe = function (listener) {
             var ix = -1;
-            for(var iw = 0; iw < _subscriptions.length; iw ++) {
+            for (var iw = 0; iw < _subscriptions.length; iw++) {
                 if (_subscriptions[iw].listener == listener) {
                     ix = iw;
                     break;
                 }
             }
-            if (ix >= 0)  {
+            if (ix >= 0) {
                 _subscriptions.splice(ix, 1);
             }
         };
@@ -55,7 +67,8 @@
             }
         };
     }
-    var appMessaging = rootWindow['appMessaging'] || new AppMessaging();
+
+    var appMessaging = new AppMessaging();
     global.appMessaging = global['appMessaging'] || appMessaging;
     appMessaging.start();
 
