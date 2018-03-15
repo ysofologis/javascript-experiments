@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>app2</title>
+    <link type="text/css" rel="stylesheet" href="index.css">
+    <script src="jquery.js"></script>
+    <script src="messaging.js"></script>
+</head>
+<body>
+<div class="app full">
+    <div style="top: 100px;">
+        <div>This is App 2</div>
+        <button id="btnSend">Send message</button>
+        <div id="log"></div>
+    </div>
+</div>
+<script type="text/javascript">
+    $(document).ready(function () {
+        var listener = {
+            messageArrived: function (message) {
+                var log = "APP2 - " + JSON.stringify(message);
+                var span = document.createElement('div');
+                span.innerHTML = log;
+                $('#log').append(span);
+            },
+        };
+        appMessaging.subscribe('all', listener);
+        $('#btnSend').click(function () {
+            appMessaging.broadcastMessage('all', {
+                from: 'app2',
+                content: 'hi guys',
+            });
+        });
+    });
+</script>
+</body>
+</html>

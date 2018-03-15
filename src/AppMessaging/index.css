@@ -1,0 +1,28 @@
+
+html, body {
+    height: 100%;
+    margin: 0;
+}
+
+.app {
+    height: 50%;
+    width: 100%;
+    background-color: #fafafa;
+}
+
+.app.full {
+    height: 100%;
+    background-color: rgba(0,0,200,0.15);
+}
+
+.modules {
+    height: 50%;
+    width: 100%;
+    background-color: rgba(0,200,0, 0.15);
+}
+
+.modules .app {
+    float: left;
+    width: calc(50% - 1px);
+    border-left: solid 1px #aaa;
+}

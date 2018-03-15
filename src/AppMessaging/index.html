@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>App Messaging Service</title>
+    <link type="text/css" rel="stylesheet" href="index.css">
+    <script src="jquery.js"></script>
+    <script src="messaging.js"></script>
+</head>
+<body>
+    <div class="app">
+        <div style="top: 200px;">
+            This is App
+        </div>
+        <div id="log"></div>
+    </div>
+    <div class="modules">
+        <div class="app">
+            <iframe andbox="allow-scripts allow-forms allow-pointer-lock allow-same-origin"
+                    src="app1.html"></iframe>
+        </div>
+        <div class="app">
+            <iframe andbox="allow-scripts allow-forms allow-pointer-lock allow-same-origin"
+                    src="app2.html"></iframe>
+        </div>
+    </div>
+<script type="text/javascript">
+    var messageListener = {
+        messageArrived: function (message) {
+            var log = "APP - " + JSON.stringify(message);
+            var elem = document.createElement('div');
+            elem.innerHTML = log;
+            $('#log').append(elem);
+        },
+    };
+    appMessaging.subscribe('all', messageListener);
+</script>
+</body>
+</html>
