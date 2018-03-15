@@ -14,7 +14,7 @@
             currentWindow.setTimeout(function () {
                 listener.messageArrived(payload);
             },0);
-        }
+        };
         var handleMessage = function (evt) {
             var msg = JSON.parse(evt.data);
             for (var ix = 0; ix < _subscriptions.length; ix ++) {
