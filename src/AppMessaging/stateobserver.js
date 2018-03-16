@@ -31,7 +31,7 @@
                 return null;
             }
         };
-        that.registerState = function(stateKey, stateName, listener) {
+        that.register = function(stateKey, stateName, listener) {
             _stateMap[stateKey] = {
                 modified: false,
                 name: stateName,
@@ -39,10 +39,9 @@
             };
             messaging.subscribe(MSG_TYPE_VALIDATE, listener);
         };
-        that.unregisterState = function (stateKey) {
+        that.unregister = function (stateKey) {
             var state = _stateMap[stateKey];
             messaging.unsubscribe(state.listener);
-            state.listener = null;
             delete _stateMap[stateKey];
         };
         that.setModified = function (stateKey, modified) {
