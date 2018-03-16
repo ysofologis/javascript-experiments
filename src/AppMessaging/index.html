@@ -42,8 +42,8 @@
         $('#btnVoteState').click(function () {
             app.getStateObserver().checkState().then(function (value) {
                alert("state UNmodified");
-            }).fail(function () {
-                alert("state modified");
+            }).fail(function (modifiedStates) {
+                alert("state modified - " + JSON.stringify(modifiedStates) );
             });
         });
     });

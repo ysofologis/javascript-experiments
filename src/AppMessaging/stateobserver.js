@@ -1,5 +1,6 @@
 
 !function(global, $, undefined) {
+
     var VotedStateObserver = function (appName, messaging) {
         const MSG_TYPE_MODIFY = appName + '_modifyState';
         const MSG_TYPE_VALIDATE = appName + '_validate';
