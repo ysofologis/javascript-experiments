@@ -65,7 +65,7 @@
                 messageArrived: function (stateInfo) {
                     votedState[stateInfo.key].voted = true;
                     votedState[stateInfo.key].modified = stateInfo.modified;
-                    var finalState = getFinalState(votedState);
+                    var finalState = getFinalState(stateKeys, votedState);
                     if (finalState) {
                         messaging.unsubscribe(stateListener);
                         if (finalState.anyModified) {
@@ -79,6 +79,14 @@
             messaging.subscribe(MSG_TYPE_MODIFY, stateListener);
             messaging.broadcastMessage(MSG_TYPE_VALIDATE, {});
             return result;
+        };
+        that.cleanup = function () {
+            var stateKeys = Object.keys(_stateMap);
+            for(var ix = 0; ix < stateKeys.length; ix ++) {
+                var state = _stateMap[ stateKeys[ix] ];
+                messaging.unsubscribe(state.listener);
+            }
+            _stateMap = {};
         };
     };
     global.createStateObserver = function (appName) {
