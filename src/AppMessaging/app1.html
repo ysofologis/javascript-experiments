@@ -39,11 +39,12 @@
 
         app.getStateObserver().register('app1', 'App 1', {
             messageArrived: function () {
+                var delay = Math.floor((Math.random() * 5000));
                 setTimeout(function () {
                     var t = new Date();
                     var modified = (t.getSeconds() % 2 == 0);
                     app.getStateObserver().setModified('app1', modified);
-                }, 2000);
+                }, delay);
             },
         });
     });

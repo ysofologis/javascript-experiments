@@ -37,9 +37,10 @@
 
         app.getStateObserver().register('app2', 'App 2', {
             messageArrived: function () {
+                var delay = Math.floor((Math.random() * 5000));
                 setTimeout(function () {
                     app.getStateObserver().setModified('app2', false);
-                }, 2500);
+                }, delay);
             },
         });
     });
