@@ -1,8 +1,8 @@
-<div id="<%=tabNode%>" ng-controller="<%=tabController%>">
+<div id="<%=tabNode%>">
     {{message}}
 </div>
 <script type="text/javascript">
-    registerModule('tab1', function (module) {
+    registerModule('<%=tabModule%>', function (module) {
         module.instanceCount = 0;
         module.ready = function (appId) {
             var appInstance = module.registerApp(appId, { instanceId: ++ module.instanceCount },
@@ -14,9 +14,12 @@
                     });
                     var $injector = angular.injector(['ng', 'tabsApp']);
                     var element = $('#<%=tabNode%>');
+                    element.attr({'ng-controller': '<%=tabController%>'});
+
                     $injector.invoke(function($rootScope, $compile) {
                         $compile(element[0])($rootScope);
                         $rootScope.$digest();
+                        corelib.log('<%=tabModule%>', 'loaded');
                     });
                 };
                 app.dispose = function () {
@@ -26,8 +29,12 @@
             appInstance.ready();
         };
         module.dispose = function (appId) {
-            module.apps[appId].dispose();
-            delete module.apps[appId];
+            if (appId) {
+                module.apps[appId].dispose();
+                delete module.apps[appId];
+            } else {
+                module.destruct();
+            }
         };
     }).ready();
 </script>

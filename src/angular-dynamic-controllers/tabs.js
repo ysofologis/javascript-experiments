@@ -27,12 +27,13 @@ registerModule('tabs', function (module) {
     };
     var loadTab = function (tabName, tabId, content) {
         var templateFn = _.template(content);
-        var tabContent = templateFn({
+        var context ={
             tabId: tabId,
             tabNode: 'tabNode_' + tabName + '_' + tabId,
             tabController: 'controller_' + tabName + '_' + tabId,
             tabModule: 'module_' + tabName + '_' + tabId,
-        });
+        };
+        var tabContent = templateFn(context);
         $('#app .tab-container .tab-items').append($(tabContent));
     };
     module.initTabs = function () {
@@ -44,7 +45,8 @@ registerModule('tabs', function (module) {
             url: tabUrl,
             type: 'GET',
             success: function (content) {
-                loadTab(tabName, ++nextTabId, content);
+                var tabId = ++nextTabId;
+                loadTab(tabName, tabId, content);
             },
             error: function (err) {
                 corelib.log('tabs', JSON.stringify(err), true);
