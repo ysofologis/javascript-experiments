@@ -6,6 +6,8 @@
     <link type="text/css" rel="stylesheet" href="index.css">
     <script src="jquery.js"></script>
     <script src="messaging.js"></script>
+    <script src="stateobserver.js"></script>
+    <script src="app.js"></script>
 </head>
 <body>
 <div class="app full">
@@ -31,6 +33,15 @@
                 from: 'app2',
                 content: 'hi guys',
             });
+        });
+
+        app.getStateObserver().register('app2', 'App 2', {
+            messageArrived: function () {
+                var delay = Math.floor((Math.random() * 5000));
+                setTimeout(function () {
+                    app.getStateObserver().setModified('app2', false);
+                }, delay);
+            },
         });
     });
 </script>
