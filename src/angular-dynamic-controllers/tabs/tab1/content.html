@@ -1,0 +1,33 @@
+<div id="<%=tabNode%>" ng-controller="<%=tabController%>">
+    {{message}}
+</div>
+<script type="text/javascript">
+    registerModule('tab1', function (module) {
+        module.instanceCount = 0;
+        module.ready = function (appId) {
+            var appInstance = module.registerApp(appId, { instanceId: ++ module.instanceCount },
+                function (app) {
+                app.ready = function () {
+                    angular.module('tabsApp').controller('<%=tabController%>', function ($scope) {
+                        $scope.message = 'Hello there !!';
+                        // $scope.$apply();
+                    });
+                    var $injector = angular.injector(['ng', 'tabsApp']);
+                    var element = $('#<%=tabNode%>');
+                    $injector.invoke(function($rootScope, $compile) {
+                        $compile(element[0])($rootScope);
+                        $rootScope.$digest();
+                    });
+                };
+                app.dispose = function () {
+
+                };
+            });
+            appInstance.ready();
+        };
+        module.dispose = function (appId) {
+            module.apps[appId].dispose();
+            delete module.apps[appId];
+        };
+    }).ready();
+</script>

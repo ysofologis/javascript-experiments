@@ -1,0 +1,42 @@
+html, body {
+    height: 100%;
+    margin: 0;
+}
+
+#app {
+    height: 100%;
+    width: 100%;
+    font-family: sans-serif;
+}
+#app .main-container {
+    float: left;
+    height: 80%;
+    width: 20%;
+    background-color: #777;
+}
+
+#app .tab-container {
+    float: left;
+    height: 80%;
+    width: 80%;
+    background-color: #fafafa;
+}
+#app .log {
+    clear: both;
+    height: 20%;
+    overflow: auto;
+    background-color: #333;
+    color: #fafafa;
+}
+#app .log .row {
+    width: 100%;
+    display: block;
+    font-family: monospace;
+}
+#app .log .row.error {
+    color: firebrick;
+}
+
+#dynamic-load-container {
+    display: none;
+}
