@@ -1,6 +1,12 @@
-<div id="<%=tabNode%>">
-    {{message}}
+<div id='<%=tabNode%>' style='clear:both; background-color:#aaa; margin-top: 10px;'>
+    <div style='float:left;'>
+        {{message}}
+    </div>
+    <div style='float:right;'>
+        <button ng-click='unloadModule()'>Close</button>
+    </div>
 </div>
+
 <script type="text/javascript">
     registerModule('<%=tabModule%>', function (module) {
         module.instanceCount = 0;
@@ -10,10 +16,15 @@
                 app.ready = function () {
                     angular.module('tabsApp').controller('<%=tabController%>', function ($scope) {
                         $scope.message = 'Hello there !!';
-                        // $scope.$apply();
+                        $scope.unloadModule = function() {
+                            setTimeout(function(){
+                                debugger;
+                                module.dispose(appId);
+                            },0);
+                        };
                     });
-                    var $injector = angular.injector(['ng', 'tabsApp']);
                     var element = $('#<%=tabNode%>');
+                    var $injector = angular.injector(['ng', 'tabsApp']);
                     element.attr({'ng-controller': '<%=tabController%>'});
 
                     $injector.invoke(function($rootScope, $compile) {
@@ -22,16 +33,17 @@
                         corelib.log('<%=tabModule%>', 'loaded');
                     });
                 };
-                app.dispose = function () {
-
-                };
+                app.dispose = function () { };
             });
             appInstance.ready();
         };
         module.dispose = function (appId) {
-            if (appId) {
+            if (appId && module.apps[appId]) {
                 module.apps[appId].dispose();
                 delete module.apps[appId];
+                if (Object.key(module.apps).length == 0) {
+                    module.destruct();
+                }
             } else {
                 module.destruct();
             }
