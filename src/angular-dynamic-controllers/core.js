@@ -19,6 +19,8 @@
                     tabNode.empty();
                     tabNode.remove();
                 }
+                app.ready = null;
+                app.dispose = null;
                 app = null;
             };
             appInit(app);
@@ -40,6 +42,8 @@
             };
             module.destruct = function() {
                 delete parent[moduleName];
+                module.ready = null;
+                module.dispose = null;
                 module = null;
             };
             moduleInit(module);
@@ -66,6 +70,61 @@
             }
             rowDiv.innerHTML = content;
             $('#app .log').append(rowDiv);
+        };
+        module.clearLog = function() {
+            $('#app .log .row').remove();
+        };
+        var createMessageHub = function() {
+            var _subscriptions = [];
+
+            var runCallback = function(callback, payload) {
+                setTimeout(function() { 
+                    callback(payload);
+                },0);
+            };
+            var handleMessage = function(evt) {
+                if (evt.data && typeof evt.data == 'string' ) {
+                    var msg = JSON.parse(evt.data);
+                    for(var ix = 0; ix < _subscriptions.length; ix ++) {
+                        if (_subscriptions[ix].messageType == msg.messageType) {
+                            runCallback(_subscriptions[ix].callback, msg.payload);
+                        }
+                    }
+                }
+            };
+            var _hub = {
+                subscribe: function(messageType, callback) {
+                    var sub = {
+                        messageType: messageType,
+                        callback: callback,
+                    };
+                    _subscriptions.push(sub);
+                    return sub;
+                },
+                unsubscribe: function(sub) {
+                    var ix = _subscriptions.indexOf(sub);
+                    if (ix >= 0) {
+                        _subscriptions.splice(ix, 1);
+                    }
+                },
+                broadcast: function(messageType, message) {
+                    window.postMessage( JSON.stringify({
+                        messageType: messageType,
+                        payload: message,
+                    }), window.location.origin );
+                },
+                start: function() {
+                    window.addEventListener('message', function(evt) {
+                        handleMessage(evt);
+                    });
+                    return _hub;
+                },
+            };
+            return _hub;
+        };
+        var _messageHub = createMessageHub().start();
+        module.messageHub = function() {
+            return _messageHub;
         };
     });
 }(this);

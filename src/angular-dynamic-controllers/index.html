@@ -17,6 +17,8 @@
             <div ng-controller="menuController">
                 <h4 style="color: #fafafa;">{{title}}</h4>
                 <button ng-click="loadTab('tab1')">Add Tab</button>
+                <button ng-click="loadTabs('tab1', 20)">Add 20 Tabs</button>
+                <button ng-click="closeAllTabs()">Close All Tabs</button>
             </div>
         </div>
         <div class="tab-container">
@@ -25,7 +27,9 @@
                 </div>
             </div>
         </div>
-        <div class="log"></div>
+        <div class="log" ng-controller="logController">
+            <button class='clear-button' ng-click="clearLog()">Clear</button>
+        </div>
     </div>
     <div id="dynamic-load-container"></div>
     <script type="text/javascript">

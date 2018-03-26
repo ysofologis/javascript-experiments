@@ -10,7 +10,7 @@
         registerModule('<%=tabModule%>', function (module) {
             module.instanceCount = 0;
             module.ready = function (appId) {
-                var appInstance = module.registerApp(appId, { instanceId: ++ module.instanceCount },
+                module.registerApp(appId, { instanceId: ++ module.instanceCount },
                     function (app) {
                     app.ready = function () {
                         // debugger;
@@ -30,18 +30,24 @@
                                 };
                         });
                     };
+                    corelib.log('tabs','tab ' + appId + ' loaded');
                     app.dispose = function () { };
-                });
-                appInstance.ready();
+                }).ready();
             };
+            var sub = corelib.messageHub().subscribe('tab-close', function(msg) {
+                module.dispose('<%= tabId %>');
+            });
             module.dispose = function (appId) {
+                corelib.messageHub().unsubscribe(sub);
                 var element = $('#<%=tabNode%>');
                 if (appId && module.apps[appId]) {
                     module.apps[appId].angularTabCleanup(element);
+                    corelib.log('tabs','tab ' + appId + ' clean');
                 } else {
                     module.destruct();
                     element.empty();
                     element.remove();
+                    corelib.log('tabs','tab ' + appId + ' destructed');
                 }
             };
         }).ready('<%= tabId %>');

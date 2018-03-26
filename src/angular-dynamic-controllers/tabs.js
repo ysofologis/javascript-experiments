@@ -22,8 +22,8 @@ registerModule('tabs', function (module) {
             function ($scope, $compile, tabViewModelBuilder) {
                 $scope.isMock = false;
             }])
-            .controller('tabViewModelController', ['$scope', 'tabViewModelBuilder', 
-                function ($scope, tabViewModelBuilder) {
+            .controller('tabViewModelController', ['$scope', 
+                function ($scope) {
                     // tabViewModelBuilder.buildScope($scope);
                     console.log('Hello from tabViewModelController');
             }]);

@@ -15,19 +15,26 @@ html, body {
     background-color: #777;
 }
 
+#app .main-container button {
+    width: 100%;
+    height: 32px;
+}
+
 #app .tab-container {
     float: left;
     height: 80%;
     width: 80%;
     background-color: #fafafa;
+    overflow-y: auto;
 }
 
 #app .tab-container .tab-content {
     clear: both;
     background-color: #ddd;
-    line-height: 32px;
-    height: 32px;
-    vertical-align: middle;    
+    line-height: 40px;
+    height: 40px;
+    vertical-align: middle;
+    margin-top: 5px;    
 }
 #app .tab-container .tab-body {
     float: left;
@@ -43,6 +50,14 @@ html, body {
     overflow: auto;
     background-color: #333;
     color: #fafafa;
+    position: relative;
+}
+#app .log .clear-button {
+    position: absolute;
+    top:0;
+    right:0;
+    width: 50px;
+    height: 25px;
 }
 #app .log .row {
     width: 100%;
