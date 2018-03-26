@@ -4,25 +4,35 @@ registerModule('tabs', function (module) {
     var tabApp = null;
     var loadTabApp = function () {
         if (!tabApp) {
-            var app = angular.module('tabsApp', []).config(function ($controllerProvider) {
-                // app._controller = app.controller;
-                // app.controller = function (name, constructor) {
-                //     $controllerProvider.register(name, constructor);
-                //     return (this);
-                // }
-                app.dynamicController = function (name, constructor) {
-                    $controllerProvider.register(name, constructor);
-                    return (this);
-                }
-            }).controller('rootTabController', ['$scope', function ($scope) {
+            var app = angular.module('tabsApp', []).config(function ($controllerProvider) {})
+            .service('tabViewModelBuilder', ['$injector', '$compile', '$rootScope', '$controller',
+            function($injector, $compile, $rootScope, $controller) {
+                return {
+                    buildDynamicScope: function(app, tabNode, scopeBuilder) {
+                        var newScope = $rootScope.$new(true);  
+                        scopeBuilder($injector, newScope);
+                        $controller('tabViewModelController', { $scope: newScope });                        
+                        app.angularScope = newScope;
+                        app.angularElem = $compile(tabNode[0])(newScope);
+                        newScope.$apply();
+                    },
+                };
+            }])
+            .controller('rootTabController', ['$scope','$compile', 'tabViewModelBuilder', 
+            function ($scope, $compile, tabViewModelBuilder) {
                 $scope.isMock = false;
+            }])
+            .controller('tabViewModelController', ['$scope', 'tabViewModelBuilder', 
+                function ($scope, tabViewModelBuilder) {
+                    // tabViewModelBuilder.buildScope($scope);
+                    console.log('Hello from tabViewModelController');
             }]);
             var tabsNode = $('#app .tab-container .angular-tab-app');
-            tabsNode.appendTo($('#dynamic-load-container'));
-            angular.bootstrap(tabsNode[0], ['tabsApp']);
-            tabApp = app;
-            tabsNode.appendTo($('#app .tab-container'));
-            corelib.log('tabs', 'initialized');
+                tabsNode.appendTo($('#dynamic-load-container'));
+                angular.bootstrap(tabsNode[0], ['tabsApp']);
+                tabApp = app;
+                tabsNode.appendTo($('#app .tab-container'));
+                corelib.log('tabs', 'initialized');
         }
     };
     var loadTab = function (tabName, tabId, content) {

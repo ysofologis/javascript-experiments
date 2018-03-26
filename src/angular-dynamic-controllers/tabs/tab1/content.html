@@ -1,57 +1,50 @@
-<div id='<%=tabNode%>' style='clear:both; background-color:#aaa; margin-top: 10px;'>
-    <div style='float:left;'>
+<div id='<%=tabNode%>' class='tab-content'>
+    <div class='tab-body'>
         {{message}}
     </div>
-    <div style='float:right;'>
+    <div class="tab-head">
         <button ng-click='unloadModule()'>Close</button>
     </div>
-</div>
 
-<script type="text/javascript">
-    registerModule('<%=tabModule%>', function (module) {
-        module.instanceCount = 0;
-        module.ready = function (appId) {
-            var appInstance = module.registerApp(appId, { instanceId: ++ module.instanceCount },
-                function (app) {
-                app.ready = function () {
-                    angular.module('tabsApp').controller('<%=tabController%>', function ($scope) {
-                        $scope.message = 'Hello there !!';
-                        $scope.unloadModule = function() {
-                            setTimeout(function(){
-                                debugger;
-                                module.dispose(appId);
-                            },0);
-                        };
-                    });
-                    var element = $('#<%=tabNode%>');
-                    var $injector = angular.injector(['ng', 'tabsApp']);
-                    element.attr({'ng-controller': '<%=tabController%>'});
-
-                    $injector.invoke(function($rootScope, $compile) {
-                        $compile(element[0])($rootScope);
-                        $rootScope.$digest();
-                        corelib.log('<%=tabModule%>', 'loaded');
-                    });
-                };
-                app.dispose = function () { };
-            });
-            appInstance.ready();
-        };
-        module.dispose = function (appId) {
-            var element = $('#<%=tabNode%>');
-            if (appId && module.apps[appId]) {
-                module.apps[appId].dispose();
-                delete module.apps[appId];
-                if (Object.key(module.apps).length == 0) {
+    <script type="text/javascript">
+        registerModule('<%=tabModule%>', function (module) {
+            module.instanceCount = 0;
+            module.ready = function (appId) {
+                var appInstance = module.registerApp(appId, { instanceId: ++ module.instanceCount },
+                    function (app) {
+                    app.ready = function () {
+                        // debugger;
+                        var tabNode=$('#<%=tabNode%>');
+                        var $injector = angular.injector(['ng', 'tabsApp']);
+                        var tabViewModelBuilder = $injector.get('tabViewModelBuilder');
+                        var tabId = appId;
+                        tabViewModelBuilder.buildDynamicScope(app, tabNode, 
+                            function(injector, scope) {
+                                // debugger;
+                                scope.message = 'Hello there !!!';
+                                scope.unloadModule = function() {
+                                    setTimeout(function( ){
+                                        // debugger;
+                                        module.dispose(tabId);
+                                    }, 0);
+                                };
+                        });
+                    };
+                    app.dispose = function () { };
+                });
+                appInstance.ready();
+            };
+            module.dispose = function (appId) {
+                var element = $('#<%=tabNode%>');
+                if (appId && module.apps[appId]) {
+                    module.apps[appId].angularTabCleanup(element);
+                } else {
                     module.destruct();
                     element.empty();
                     element.remove();
                 }
-            } else {
-                module.destruct();
-                element.empty();
-                element.remove();
-            }
-        };
-    }).ready('<%= tabId %>');
-</script>
+            };
+        }).ready('<%= tabId %>');
+    </script>    
+</div>
+

@@ -1,6 +1,10 @@
 
 registerModule('theApp', function (module) {
      module.start = function () {
+        $.ajaxSetup ({
+            cache: false
+        });
+
         angular.module('rootApp', []).controller('menuController', function ($scope) {
             $scope.title = 'This is supposed to be the main menu';
             $scope.menuItems = [];

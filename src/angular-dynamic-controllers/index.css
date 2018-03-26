@@ -21,6 +21,22 @@ html, body {
     width: 80%;
     background-color: #fafafa;
 }
+
+#app .tab-container .tab-content {
+    clear: both;
+    background-color: #ddd;
+    line-height: 32px;
+    height: 32px;
+    vertical-align: middle;    
+}
+#app .tab-container .tab-body {
+    float: left;
+}
+#app .tab-container .tab-head {
+    float: right;
+}
+
+
 #app .log {
     clear: both;
     height: 20%;

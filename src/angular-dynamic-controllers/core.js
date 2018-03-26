@@ -5,6 +5,22 @@
             var app = module.apps[appName] = {};
             app.name = appName;
             app.params = appParams;
+            app.angularTabCleanup = function(tabNode) {
+                if (app.angularScope) {
+                    app.angularScope.$destroy();
+                    app.angularScope = null;
+                    app.angularElem.remove();
+                    app.angularElem  = null;
+                }
+                app.dispose();
+                delete module.apps[app.name];
+                if (Object.keys(module.apps).length == 0) {
+                    module.destruct();
+                    tabNode.empty();
+                    tabNode.remove();
+                }
+                app = null;
+            };
             appInit(app);
         }
         return module.apps[appName];
@@ -24,6 +40,7 @@
             };
             module.destruct = function() {
                 delete parent[moduleName];
+                module = null;
             };
             moduleInit(module);
         }
