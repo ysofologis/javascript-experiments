@@ -28,25 +28,28 @@ registerModule('tabs', function (module) {
                     // tabViewModelBuilder.buildScope($scope);
                     console.log('Hello from tabViewModelController');
             }]);
-            var tabsNode = $('#app .tab-container .angular-tab-app');
-                tabsNode.appendTo($('#dynamic-load-container'));
-                angular.bootstrap(tabsNode[0], ['tabsApp']);
+            var angularAppNode = $('#app .tab-container .angular-tab-app');
+                angularAppNode.appendTo($('#dynamic-load-container'));
+                angular.bootstrap(angularAppNode[0], ['tabsApp']);
                 tabApp = app;
-                tabsNode.appendTo($('#app .tab-container'));
+                angularAppNode.appendTo($('#app .tab-container'));
                 corelib.log('tabs', 'initialized');
+                angularAppNode = null;
         }
     };
     var loadTab = function (tabName, tabId, content) {
         var templateFn = tabTemplates[tabName] || _.template(content);
-        var context ={
+        var context = {
             tabId: tabId,
             tabNode: 'tabNode_' + tabName + '_' + tabId,
             tabController: 'controller_' + tabName + '_' + tabId,
             tabModule: 'module_' + tabName + '_' + tabId,
         };
         var tabContent = templateFn(context);
-        $('#app .tab-container .tab-items').append(tabContent);
+        var tabContainer = $('#app .tab-container .tab-items');
+        tabContainer.append(tabContent);
         tabTemplates[tabName] = tabTemplates[tabName] || templateFn;
+        tabContainer = null;
     };
     module.initTabs = function () {
         loadTabApp();
@@ -65,4 +68,5 @@ registerModule('tabs', function (module) {
             },
         })
     };
+    return module;
 });

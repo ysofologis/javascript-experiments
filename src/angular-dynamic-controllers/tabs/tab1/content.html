@@ -1,4 +1,4 @@
-<div id='<%=tabNode%>' class='tab-content'>
+<div id='<%= tabNode %>' class='tab-content'>
     <div class='tab-body'>
         {{message}}
     </div>
@@ -7,11 +7,11 @@
     </div>
 
     <script type="text/javascript">
-        registerModule('<%=tabModule%>', function (module) {
+        registerModule('<%= tabModule %>', function (module) {
             module.instanceCount = 0;
             module.ready = function (appId) {
                 module.registerApp(appId, {
-                        instanceId: ++module.instanceCount
+                        instanceId: ++ module.instanceCount
                     },
                     function (app) {
                         app.templateName = 'tab1-template';
@@ -35,20 +35,22 @@
                         };
                         corelib.log('tabs', 'tab ' + appId + ' loaded');
                         app.dispose = function () {};
-                    }).ready();
+                        return app;
+                    });
+                module.runApp(appId);
             };
-            var sub = corelib.messageHub().subscribe('tab-close', function (msg) {
-                module.dispose('<%= tabId %>');
-            });
-            module.dispose = function (appId) {
-                corelib.messageHub().unsubscribe(sub);
-                var element = $('#<%=tabNode%>');
-                var app = module.apps[appId];
-                app.angularTabCleanup(element);
+            var sub1 = corelib.messageHub().subscribe('tab-close', function (msg) {
+                var appId = '<%= tabId %>';
+                var appNode = $('#<%= tabNode %>');
+                module.angularCleanup(appId, appNode);
                 corelib.log('tabs', 'tab ' + appId + ' clean');
-                element = null;
-                app = null;
+                module = null;
+            });
+            module.dispose = function () {
+                corelib.messageHub().unsubscribe(sub1);
+                corelib.log('tabs', 'module <%= tabModule %> unloaded');
             };
+            return module;
         }).ready('<%= tabId %>');
     </script>
 </div>
