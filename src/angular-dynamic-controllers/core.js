@@ -20,11 +20,11 @@
                 },
             };
         };
-        function getModuleRegistry() {
-            if (!parentModule['__modules__']) {
-                parentModule['__modules__'] = moduleRegistryBuilder();
+        function getModuleRegistry(module) {
+            if (!module['__modules__']) {
+                module['__modules__'] = moduleRegistryBuilder();
             }
-            return parentModule['__modules__'];
+            return module['__modules__'];
         }
         function cleanupNode(node) {
             if (node) {
@@ -37,16 +37,16 @@
             name: name,
         };
         parentModule.getModule = function (moduleName) {
-            var m = getModuleRegistry().create(moduleName);
+            var m = getModuleRegistry(this).create(moduleName);
             return m;
         };
         parentModule.apps = {};
         parentModule.runApp = function (appId) {
-            var app = parentModule.apps[appId];
+            var app = this.apps[appId];
             app.ready();
         };
         parentModule.registerModule = function (moduleName, moduleInit) {
-            var module = getModuleRegistry().create(moduleName);
+            var module = getModuleRegistry(this).create(moduleName);
             if (!module['__meta__']) {
                 makeModule(module, moduleName);
                 module.destruct = function () {
@@ -56,8 +56,8 @@
                     this.apps = {};
                     this.dispose = null;
                     this.ready = null;
-                    delete parentModule[moduleName];
-                    getModuleRegistry().destroy(moduleName);
+                    delete this[moduleName];
+                    getModuleRegistry(this).destroy(moduleName);
                 };
                 module.angularCleanup = function (appId, appNode) {
                     if (this.apps[appId]) {
@@ -69,12 +69,13 @@
                         cleanupNode(appNode);
                     }
                 };
+                this[moduleName] = module;
                 moduleInit(module);
             }
         };
         parentModule.registerApp = function (appName, appParams, appInit) {
-            if (!parentModule.apps[appName]) {
-                var app = parentModule.apps[appName] = {}
+            if (!this.apps[appName]) {
+                var app = this.apps[appName] = {}
                 app.name = appName
                 app.params = appParams
                 app.angularTabCleanup = function (tabNode) {
