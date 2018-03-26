@@ -10,31 +10,34 @@
         registerModule('<%=tabModule%>', function (module) {
             module.instanceCount = 0;
             module.ready = function (appId) {
-                module.registerApp(appId, { instanceId: ++ module.instanceCount },
+                module.registerApp(appId, {
+                        instanceId: ++module.instanceCount
+                    },
                     function (app) {
-                    app.ready = function () {
-                        // debugger;
-                        var tabNode=$('#<%=tabNode%>');
-                        var $injector = angular.injector(['ng', 'tabsApp']);
-                        var tabViewModelBuilder = $injector.get('tabViewModelBuilder');
-                        var tabId = appId;
-                        tabViewModelBuilder.buildDynamicScope(app, tabNode, 
-                            function(injector, scope) {
-                                // debugger;
-                                scope.message = 'Hello there !!!';
-                                scope.unloadModule = function() {
-                                    setTimeout(function( ){
-                                        // debugger;
-                                        module.dispose(tabId);
-                                    }, 0);
-                                };
-                        });
-                    };
-                    corelib.log('tabs','tab ' + appId + ' loaded');
-                    app.dispose = function () { };
-                }).ready();
+                        app.templateName = 'tab1-template';
+                        app.ready = function () {
+                            // debugger;
+                            var tabNode = $('#<%=tabNode%>');
+                            var $injector = angular.injector(['ng', 'tabsApp']);
+                            var tabViewModelBuilder = $injector.get('tabViewModelBuilder');
+                            var tabId = appId;
+                        //     tabViewModelBuilder.buildDynamicScope(app, tabNode,
+                        //         function (injector, scope) {
+                        //             // debugger;
+                        //             scope.message = 'Hello there !!!';
+                        //             scope.unloadModule = function () {
+                        //                 setTimeout(function () {
+                        //                     // debugger;
+                        //                     module.dispose(tabId);
+                        //                 }, 0);
+                        //             };
+                        //         });
+                        };
+                        corelib.log('tabs', 'tab ' + appId + ' loaded');
+                        app.dispose = function () {};
+                    }).ready();
             };
-            var sub = corelib.messageHub().subscribe('tab-close', function(msg) {
+            var sub = corelib.messageHub().subscribe('tab-close', function (msg) {
                 module.dispose('<%= tabId %>');
             });
             module.dispose = function (appId) {
@@ -42,15 +45,14 @@
                 var element = $('#<%=tabNode%>');
                 if (appId && module.apps[appId]) {
                     module.apps[appId].angularTabCleanup(element);
-                    corelib.log('tabs','tab ' + appId + ' clean');
+                    corelib.log('tabs', 'tab ' + appId + ' clean');
                 } else {
                     module.destruct();
                     element.empty();
                     element.remove();
-                    corelib.log('tabs','tab ' + appId + ' destructed');
+                    corelib.log('tabs', 'tab ' + appId + ' destructed');
                 }
             };
         }).ready('<%= tabId %>');
-    </script>    
+    </script>
 </div>
-

@@ -9,14 +9,15 @@
                 if (app.angularScope) {
                     app.angularScope.$destroy();
                     app.angularScope = null;
-                    app.angularElem.remove();
+                    // app.angularElem.remove();
                     app.angularElem  = null;
                 }
                 app.dispose();
                 delete module.apps[app.name];
                 if (Object.keys(module.apps).length == 0) {
                     module.destruct();
-                    tabNode.empty();
+                    // tabNode.empty();
+                    // tabNode.appendTo("#angular-trash-container");
                     tabNode.remove();
                 }
                 app.ready = null;

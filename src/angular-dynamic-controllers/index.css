@@ -71,3 +71,6 @@ html, body {
 #dynamic-load-container {
     display: none;
 }
+#angular-trash-container {
+    display: none;
+}
