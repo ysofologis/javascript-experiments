@@ -17,21 +17,21 @@
                         app.templateName = 'tab1-template';
                         app.ready = function () {
                             // debugger;
-                            var tabNode = $('#<%=tabNode%>');
-                            var $injector = angular.injector(['ng', 'tabsApp']);
-                            var tabViewModelBuilder = $injector.get('tabViewModelBuilder');
                             var tabId = appId;
-                        //     tabViewModelBuilder.buildDynamicScope(app, tabNode,
-                        //         function (injector, scope) {
-                        //             // debugger;
-                        //             scope.message = 'Hello there !!!';
-                        //             scope.unloadModule = function () {
-                        //                 setTimeout(function () {
-                        //                     // debugger;
-                        //                     module.dispose(tabId);
-                        //                 }, 0);
-                        //             };
-                        //         });
+                            // var tabNode = $('#<%=tabNode%>');
+                            // var $injector = angular.injector(['ng', 'tabsApp']);
+                            // var tabViewModelBuilder = $injector.get('tabViewModelBuilder');
+                            // tabViewModelBuilder.buildDynamicScope(app, tabNode,
+                            //     function (injector, scope) {
+                            //         // debugger;
+                            //         scope.message = 'Hello there !!!';
+                            //         scope.unloadModule = function () {
+                            //             setTimeout(function () {
+                            //                 // debugger;
+                            //                 module.dispose(tabId);
+                            //             }, 0);
+                            //         };
+                            //     });
                         };
                         corelib.log('tabs', 'tab ' + appId + ' loaded');
                         app.dispose = function () {};
@@ -43,15 +43,11 @@
             module.dispose = function (appId) {
                 corelib.messageHub().unsubscribe(sub);
                 var element = $('#<%=tabNode%>');
-                if (appId && module.apps[appId]) {
-                    module.apps[appId].angularTabCleanup(element);
-                    corelib.log('tabs', 'tab ' + appId + ' clean');
-                } else {
-                    module.destruct();
-                    element.empty();
-                    element.remove();
-                    corelib.log('tabs', 'tab ' + appId + ' destructed');
-                }
+                var app = module.apps[appId];
+                app.angularTabCleanup(element);
+                corelib.log('tabs', 'tab ' + appId + ' clean');
+                element = null;
+                app = null;
             };
         }).ready('<%= tabId %>');
     </script>

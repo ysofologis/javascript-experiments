@@ -2,6 +2,7 @@
 registerModule('tabs', function (module) {
     var nextTabId = 0;
     var tabApp = null;
+    var tabTemplates = {};
     var loadTabApp = function () {
         if (!tabApp) {
             var app = angular.module('tabsApp', []).config(function ($controllerProvider) {})
@@ -36,7 +37,7 @@ registerModule('tabs', function (module) {
         }
     };
     var loadTab = function (tabName, tabId, content) {
-        var templateFn = _.template(content);
+        var templateFn = tabTemplates[tabName] || _.template(content);
         var context ={
             tabId: tabId,
             tabNode: 'tabNode_' + tabName + '_' + tabId,
@@ -44,7 +45,8 @@ registerModule('tabs', function (module) {
             tabModule: 'module_' + tabName + '_' + tabId,
         };
         var tabContent = templateFn(context);
-        $('#app .tab-container .tab-items').append($(tabContent));
+        $('#app .tab-container .tab-items').append(tabContent);
+        tabTemplates[tabName] = tabTemplates[tabName] || templateFn;
     };
     module.initTabs = function () {
         loadTabApp();
