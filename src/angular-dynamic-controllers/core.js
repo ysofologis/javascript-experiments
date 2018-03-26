@@ -1,13 +1,13 @@
 
 !function(global, undefined) {
     var createModuleApp = function (module, appName, appInit, appParams) {
-        if (!module[appName]) {
-            var app = module[appName] = {};
+        if (!module.apps[appName]) {
+            var app = module.apps[appName] = {};
             app.name = appName;
             app.params = appParams;
             appInit(app);
         }
-        return module[appName];
+        return module.apps[appName];
     };
     var createModule = function (parent, moduleName, moduleInit) {
         if (!parent[moduleName]) {
@@ -21,6 +21,9 @@
             module.apps = {};
             module.registerApp = function (appName, appParams, appInit) {
                 return createModuleApp(module, appName, appInit, appParams);
+            };
+            module.destruct = function() {
+                delete parent[moduleName];
             };
             moduleInit(module);
         }

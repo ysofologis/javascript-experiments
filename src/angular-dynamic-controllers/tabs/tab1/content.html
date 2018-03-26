@@ -38,15 +38,20 @@
             appInstance.ready();
         };
         module.dispose = function (appId) {
+            var element = $('#<%=tabNode%>');
             if (appId && module.apps[appId]) {
                 module.apps[appId].dispose();
                 delete module.apps[appId];
                 if (Object.key(module.apps).length == 0) {
                     module.destruct();
+                    element.empty();
+                    element.remove();
                 }
             } else {
                 module.destruct();
+                element.empty();
+                element.remove();
             }
         };
-    }).ready();
+    }).ready('<%= tabId %>');
 </script>
