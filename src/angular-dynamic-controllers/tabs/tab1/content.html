@@ -6,54 +6,8 @@
         <button ng-click='unloadModule()'>Close</button>
     </div>
 
+    <script src="tabs/tab1/content.js"></script>
     <script type="text/javascript">
-        registerModule('<%= tabModule %>', function (module) {
-            var messageHub = corelib.messageHub();
-            module.instanceCount = 0;
-            module.ready = function (appId) {
-                module.registerApp(appId, {
-                        instanceId: ++module.instanceCount
-                    },
-                    function (app) {
-                        app.templateName = 'tab1-template';
-                        app.ready = function () {
-                            // debugger;
-                            var tabId = appId;
-                            // var tabNode = $('#<%=tabNode%>');
-                            // var $injector = angular.injector(['ng', 'tabsApp']);
-                            // var tabViewModelBuilder = $injector.get('tabViewModelBuilder');
-                            // tabViewModelBuilder.buildDynamicScope(app, tabNode,
-                            //     function (injector, scope) {
-                            //         // debugger;
-                            //         scope.message = 'Hello there !!!';
-                            //         scope.unloadModule = function () {
-                            //             setTimeout(function () {
-                            //                 // debugger;
-                            //                 module.dispose(tabId);
-                            //             }, 0);
-                            //         };
-                            //     });
-                        };
-                        corelib.log('tabs', 'tab ' + appId + ' loaded');
-                        app.dispose = function () {
-                        };
-                        return app;
-                    });
-                module.runApp(appId);
-            };
-            var sub1 = messageHub.subscribe('tab-close', function (msg) {
-                var appId = '<%= tabId %>';
-                var appNode = $('#<%= tabNode %>');
-                module.angularCleanup(appId, appNode);
-                corelib.log('tabs', 'tab ' + appId + ' clean');
-                module = null;
-            });
-            module.dispose = function () {
-                messageHub.unsubscribe(sub1);
-                corelib.log('tabs', 'module <%= tabModule %> unloaded');
-                messageHub = null;
-            };
-            module.ready('<%= tabId %>');
-        });
+        getModule('tabs').registerTab1Content('<%= tabId %>', '<%= tabModule %>', '<%= tabNode %>');
     </script>
 </div>

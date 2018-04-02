@@ -28,57 +28,62 @@
         }
         function cleanupNode(node) {
             if (node) {
-                node.removeData()
-                node.html('')
-                node.remove()
+                //setTimeout(function () {
+                    // $.event.remove(node);
+                    // node.removeData();
+                    // node.html('');
+                    // node[0].parentNode.removeChild(node[0]);
+                    node.html('');
+                    node.remove();
+
+                //}, 0);
             }
         }
         parentModule['__meta__'] = {
             name: name,
         };
         parentModule.getModule = function (moduleName) {
-            var m = getModuleRegistry(this).create(moduleName);
+            var m = getModuleRegistry(parentModule).create(moduleName);
             return m;
         };
         parentModule.apps = {};
         parentModule.runApp = function (appId) {
-            var app = this.apps[appId];
+            var app = parentModule.apps[appId];
             app.ready();
         };
         parentModule.registerModule = function (moduleName, moduleInit) {
-            var module = getModuleRegistry(this).create(moduleName);
+            var module = getModuleRegistry(parentModule).create(moduleName);
             if (!module['__meta__']) {
                 makeModule(module, moduleName);
                 module.destruct = function () {
                     if (this.dispose) {
                         this.dispose();
                     }
-                    this.apps = {};
-                    this.dispose = null;
-                    this.ready = null;
-                    delete this[moduleName];
-                    getModuleRegistry(this).destroy(moduleName);
+                    getModuleRegistry(parentModule).destroy(moduleName);
+                    delete parentModule[moduleName];
+                    module = null;
                 };
-                module.angularCleanup = function (appId, appNode) {
+                module.cleanup = function (appId, appNode) {
                     if (this.apps[appId]) {
                         var app = this.apps[appId];
-                        app.angularTabCleanup(appNode);
+                        app.cleanup(appNode);
                     }
                     if (Object.keys(this.apps).length == 0) {
                         this.destruct();
                         cleanupNode(appNode);
                     }
                 };
-                this[moduleName] = module;
+                parentModule[moduleName] = module;
                 moduleInit(module);
             }
+            return module;
         };
         parentModule.registerApp = function (appName, appParams, appInit) {
-            if (!this.apps[appName]) {
-                var app = this.apps[appName] = {}
+            if (!parentModule.apps[appName]) {
+                var app = parentModule.apps[appName] = {};
                 app.name = appName
                 app.params = appParams
-                app.angularTabCleanup = function (tabNode) {
+                app.cleanup = function (tabNode) {
                     if (this.angularScope) {
                         this.angularScope.$destroy();
                         this.angularScope = null
@@ -93,6 +98,7 @@
                 };
                 appInit(app);
             }
+            return this.apps[appName];
         };
     };
 
@@ -160,7 +166,7 @@
                 start: function () {
                     window.addEventListener('message', function (evt) {
                         handleMessage(evt)
-                    })
+                    });
                     return _hub
                 }
             }
