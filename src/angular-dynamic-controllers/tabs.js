@@ -41,26 +41,30 @@ registerModule('tabs', function (module) {
         var templateFn = tabTemplates[tabName] || _.template(content);
         var context = {
             tabId: tabId,
+            tabName: tabName,
             tabNode: 'tabNode_' + tabName + '_' + tabId,
             tabController: 'controller_' + tabName + '_' + tabId,
-            tabModule: 'module_' + tabName + '_' + tabId,
+            tabModule: 'module_' + tabName,
         };
-        var tabContent = templateFn(context);
+        var tabContent = $(templateFn(context));
         var tabContainer = $('#app .tab-container .tab-items');
         tabContainer.append(tabContent);
         tabTemplates[tabName] = tabTemplates[tabName] || templateFn;
+
         tabContainer = null;
+        tabContent = null;
+        context = null;
     };
     module.initTabs = function () {
         loadTabApp();
     };
     module.loadTab = function (tabName) {
         var tabUrl = 'tabs/' + tabName + '/content.html';
+        var tabId = ++nextTabId;
         $.ajax({
             url: tabUrl,
             type: 'GET',
             success: function (content) {
-                var tabId = ++nextTabId;
                 loadTab(tabName, tabId, content);
             },
             error: function (err) {
@@ -68,5 +72,4 @@ registerModule('tabs', function (module) {
             },
         })
     };
-    return module;
 });

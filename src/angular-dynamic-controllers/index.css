@@ -47,10 +47,14 @@ html, body {
 #app .log {
     clear: both;
     height: 20%;
-    overflow: auto;
     background-color: #333;
-    color: #fafafa;
     position: relative;
+}
+#app .log .rows {
+    color: #fafafa;
+    height: 100%;
+    width: 100%;
+    overflow: auto;
 }
 #app .log .clear-button {
     position: absolute;

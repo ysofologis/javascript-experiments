@@ -1,38 +1,56 @@
 !function (global, undefined) {
 
-    var makeModule = function (parentModule, name) {
-        var moduleRegistryBuilder = function() {
-            return {
-                modules: {},
-                create: function (moduleName) {
-                    if (!this.modules[moduleName]) {
-                        this.modules[moduleName] = {};
+    var createRef = function(instance) {
+        var _instance = instance;
+        var _refCount = 0;
+        return {
+            instance: function() {
+                _refCount = _refCount + 1;
+                return _instance;
+            },
+            release: function() {
+                if (_refCount) {
+                    _refCount = _refCount - 1;
+                    if (!_refCount) {
+                        _instance = null;
                     }
-                    return this.modules[moduleName];
-                },
-                update: function (moduleName, module) {
-                    this.modules[moduleName] = module;
-                },
-                destroy: function (moduleName) {
-                    if (this.modules[moduleName]) {
-                        delete this.modules[moduleName];
-                    }
-                },
-            };
+                }
+            }
         };
-        function getModuleRegistry(module) {
-            if (!module['__modules__']) {
-                module['__modules__'] = moduleRegistryBuilder();
-            }
-            return module['__modules__'];
+    };
+    var moduleRegistryBuilder = function() {
+        return {
+            modules: {},
+            create: function (moduleName) {
+                if (!this.modules[moduleName]) {
+                    this.modules[moduleName] = {};
+                }
+                return this.modules[moduleName];
+            },
+            update: function (moduleName, module) {
+                this.modules[moduleName] = module;
+            },
+            destroy: function (moduleName) {
+                if (this.modules[moduleName]) {
+                    delete this.modules[moduleName];
+                }
+            },
+        };
+    };
+    function getModuleRegistry(module) {
+        if (!module['__modules__']) {
+            module['__modules__'] = moduleRegistryBuilder();
         }
-        function cleanupNode(node) {
-            if (node) {
-                node.removeData()
-                node.html('')
-                node.remove()
-            }
+        return module['__modules__'];
+    }
+    var cleanupNode = function(node) {
+        if (node) {
+            node.removeData();
+            node.html('');
+            node.remove();
         }
+    };
+var makeModule = function (parentModule, name) {
         parentModule['__meta__'] = {
             name: name,
         };
@@ -43,62 +61,72 @@
         parentModule.apps = {};
         parentModule.runApp = function (appId) {
             var app = this.apps[appId];
+            if (!app) {
+                parentModule.registerApp(appId, {}, parentModule.appFactory);
+                app = this.apps[appId];
+            }
             app.ready();
         };
-        parentModule.registerModule = function (moduleName, moduleInit) {
+        parentModule.registerModule = function (moduleName, initClosure) {
             var module = getModuleRegistry(this).create(moduleName);
             if (!module['__meta__']) {
                 makeModule(module, moduleName);
-                module.destruct = function () {
-                    if (this.dispose) {
-                        this.dispose();
-                    }
-                    this.apps = {};
-                    this.dispose = null;
-                    this.ready = null;
-                    delete this[moduleName];
-                    getModuleRegistry(this).destroy(moduleName);
-                };
-                module.angularCleanup = function (appId, appNode) {
+                module.cleanup = function (appId, appNode) {
                     if (this.apps[appId]) {
                         var app = this.apps[appId];
                         app.angularTabCleanup(appNode);
                     }
                     if (Object.keys(this.apps).length == 0) {
                         this.destruct();
-                        cleanupNode(appNode);
                     }
                 };
+                module.destruct = function () {
+                    if (this.dispose) {
+                        this.dispose();
+                    }
+                    var appIds = Object.keys(this.apps);
+                    for(var ix = 0; ix < appIds.length; ix ++) {
+                        var appId = appIds[ix];
+                        this.apps[appId].dispose();
+                    }
+                    delete parentModule[moduleName];
+                    getModuleRegistry(parentModule).destroy(moduleName);
+                };
+                        
                 this[moduleName] = module;
-                moduleInit(module);
+                initClosure(module);
             }
+            return module;
         };
-        parentModule.registerApp = function (appName, appParams, appInit) {
+        parentModule.registerApp = function (appName, appParams, initClosure) {
             if (!this.apps[appName]) {
-                var app = this.apps[appName] = {}
-                app.name = appName
-                app.params = appParams
-                app.angularTabCleanup = function (tabNode) {
+                var app = this.apps[appName] = {};
+                app.name = appName;
+                app.params = appParams;
+                app.cleanup = function (tabNode) {
                     if (this.angularScope) {
                         this.angularScope.$destroy();
                         this.angularScope = null
-                        cleanupNode(p.angularElem);
-                        this.angularElem.remove();
+                        // this.angularElem.remove();
                         this.angularElem = null
                     }
-                    this.dispose();
-                    delete parentModule.apps[appName]
-                    this.ready = null;
-                    this.dispose = null;
+                    if (this.dispose) {
+                        this.dispose();
+                    }
+                    cleanupNode(tabNode);
+                    delete parentModule.apps[appName];
+                    app = null;
                 };
-                appInit(app);
+
+                initClosure(app);
             }
+            return this;
         };
     };
 
     makeModule(global,'global');
 
-    global.registerModule('corelib', function (module) {
+    registerModule('corelib', function (module) {
         var _logRow = 0
         var _logTemplate = _.template('<%=row%>::<%=module%> >> <%=text%>');
         module.log = function (module, text, isError) {
@@ -111,10 +139,10 @@
                 rowDiv.className = 'row error';
             }
             rowDiv.innerHTML = content
-            $('#app .log').append(rowDiv)
+            $('#app .log .rows').append(rowDiv)
         }
         module.clearLog = function () {
-            $('#app .log .row').remove();
+            $('#app .log .rows .row').remove();
             _logRow = 0;
         }
         var createMessageHub = function () {

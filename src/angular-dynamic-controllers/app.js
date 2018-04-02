@@ -37,5 +37,4 @@ registerModule('theApp', function (module) {
         corelib.log('app', 'started');
         tabs.initTabs();
      };
-     return module;
 });
