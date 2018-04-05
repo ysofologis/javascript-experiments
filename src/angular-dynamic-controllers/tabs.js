@@ -1,7 +1,9 @@
 registerModule('tabs', function (module) {
     var nextTabId = 0;
     var tabApp = null;
-    var tabTemplates = {};
+    var _tabTemplates = {};
+    var _tabContents = {};
+
     var loadTabApp = function () {
         if (!tabApp) {
             var app = angular.module('tabsApp', []).config(function ($controllerProvider) {
@@ -43,7 +45,7 @@ registerModule('tabs', function (module) {
         }
     };
     var doLoadTab = function (tabName, tabId, content) {
-        var templateFn = tabTemplates[tabName] || _.template(content);
+        var templateFn = _tabTemplates[tabName] || _.template(content);
         var context = {
             tabId: tabId,
             tabName: tabName,
@@ -54,7 +56,7 @@ registerModule('tabs', function (module) {
         var tabContent = templateFn(context);
         var tabContainer = $('#app .tab-container .tab-items');
         tabContainer.append(tabContent);
-        tabTemplates[tabName] = tabTemplates[tabName] || templateFn;
+        _tabTemplates[tabName] = _tabTemplates[tabName] || templateFn;
         tabContainer = null;
         tabContent = null;
         context = null;
@@ -63,21 +65,33 @@ registerModule('tabs', function (module) {
         loadTabApp();
     };
     module.loadTab = function (tabName, loadCallback) {
-        var tabUrl = 'tabs/' + tabName + '/content.html';
         var tabId = ++nextTabId;
-        $.ajax({
-            url: tabUrl,
-            type: 'GET',
-            async: true,
-            success: function (content) {
-                doLoadTab(tabName, tabId, content);
-                if (loadCallback) {
-                    loadCallback();
-                }
-            },
-            error: function (err) {
-                corelib.log('tabs', JSON.stringify(err), true);
-            },
-        })
+        if (!_tabContents[tabName]) {
+            var tabUrl = 'tabs/' + tabName + '/content.html';
+            $.ajax({
+                url: tabUrl,
+                type: 'GET',
+                async: true,
+                cache: false,
+                success: function (content) {
+                    _tabContents[tabName] = {
+                        content: content,
+                    };
+                    doLoadTab(tabName, tabId, content);
+                    if (loadCallback) {
+                        loadCallback();
+                    }
+                },
+                error: function (err) {
+                    corelib.log('tabs', JSON.stringify(err), true);
+                },
+            });
+        } else {
+            var content = _tabContents[tabName].content;
+            doLoadTab(tabName, tabId, content);
+            if (loadCallback) {
+                loadCallback();
+            }
+        }
     };
 });

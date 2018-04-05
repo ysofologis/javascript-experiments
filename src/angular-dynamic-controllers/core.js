@@ -29,12 +29,12 @@
         function cleanupNode(node) {
             if (node) {
                 //setTimeout(function () {
-                // $.event.remove(node);
-                // node.removeData();
+                $.event.remove(node);
+                node.removeData();
                 // node.html('');
                 // node[0].parentNode.removeChild(node[0]);
 
-                // node.html('');
+                node.html('');
                 node.empty();
                 node.remove();
 
@@ -81,18 +81,29 @@
                 var app = parentModule.apps[appName] = {};
                 app.name = appName
                 app.params = appParams || {};
+                app.startAngular = function(appNodeId, appController) {
+                    var tabNode = $('#' + appNodeId);
+                    var $injector = angular.injector(['ng', 'tabsApp']);
+                    var tabViewModelBuilder = $injector.get('tabViewModelBuilder');
+                    tabViewModelBuilder.buildDynamicScope(app, tabNode, appController);
+                    tabNode = null;
+                };
                 app.cleanup = function (appNode) {
                     if (this.angularScope) {
                         this.angularScope.$destroy();
                         this.angularScope = null
-                        cleanupNode(this.angularElem);
+                        // cleanupNode(this.angularElem);
                         this.angularElem = null
                     }
                     app.dispose();
                     delete parentModule.apps[appName]
-                    app.ready = null;
-                    app.dispose = null;
                     cleanupNode(appNode);
+
+                    app.startAngular = null;
+                    app.dispose = null;
+                    app.ready = null;
+                    app.cleanup = null;
+                    app = null;
                 };
                 parentModule.appFactory(app);
                 app.ready();
@@ -103,6 +114,13 @@
     makeModule(global,'global');
 
     global.registerModule('corelib', function (module) {
+
+        module.runAsync = function (callback, delay) {
+            setTimeout(function () {
+                callback();
+            }, delay || 0)
+        };
+
         var _logRow = 0
         var _logTemplate = _.template('<%=row%>::<%=module%> >> <%=text%>');
         module.log = function (module, text, isError) {
@@ -115,19 +133,19 @@
                 rowDiv.className = 'row error';
             }
             rowDiv.innerHTML = content
-            $('#app .log').append(rowDiv)
+            $('#app .log .rows').append(rowDiv)
         }
         module.clearLog = function () {
-            $('#app .log .row').remove();
+            $('#app .log .rows .row').remove();
             _logRow = 0;
         }
         var createMessageHub = function () {
             var _subscriptions = []
 
             var runCallback = function (callback, payload) {
-                setTimeout(function () {
+                module.runAsync(function () {
                     callback(payload)
-                }, 0);
+                });
             };
             var handleMessage = function (evt) {
                 if (evt.data && typeof evt.data == 'string') {
@@ -231,6 +249,9 @@
                         },
                     };
                     asyncExecute(_callbacks[0], callbackIterator, function () {
+                        _callbacks.forEach( function (c) {
+                            c.callback =  null;
+                        });
                         _callbacks = [];
                     });
                 }
