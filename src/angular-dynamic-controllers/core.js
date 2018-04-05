@@ -85,8 +85,7 @@
                     if (this.angularScope) {
                         this.angularScope.$destroy();
                         this.angularScope = null
-                        cleanupNode(p.angularElem);
-                        this.angularElem.remove();
+                        cleanupNode(this.angularElem);
                         this.angularElem = null
                     }
                     app.dispose();
