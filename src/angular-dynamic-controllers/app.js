@@ -9,17 +9,19 @@ registerModule('theApp', function (module) {
             $scope.title = 'This is supposed to be the main menu';
             $scope.menuItems = [];
             var doLoadTab = function(tabName) {
-                setTimeout(function(){
-                    tabs.loadTab(tabName);
-                },0);
+                tabs.loadTab(tabName);
             };
             $scope.loadTab = function (tabName) {
                 doLoadTab(tabName);
             };
             $scope.loadTabs = function (tabName, howMany) {
+                var asyncChain = new corelib.AsyncChain();
                 for(var ix = 0; ix < howMany; ix ++) {
-                    doLoadTab(tabName);
+                    asyncChain.addAsyncAction(function () {
+                        doLoadTab(tabName);
+                    }, 50)
                 }
+                asyncChain.execute();
             };
             $scope.closeAllTabs = function() {
                 corelib.messageHub().broadcast('tab-close', {});

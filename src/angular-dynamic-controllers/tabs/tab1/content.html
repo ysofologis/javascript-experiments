@@ -5,51 +5,11 @@
     <div class="tab-head">
         <!-- <button ng-click='unloadModule()'>Close</button> -->
     </div>
-
-    <script src="tabs/tab1/content.js"></script>
     <script type="text/javascript">
-<<<<<<< HEAD
-        registerModule('<%= tabModule %>', function (module) {
-            module.instanceCount = 0;
-            module.appFactory = function(app) {
-                var appId = app.name;
-                var tabId = appId;
-                var appNodeId = '#tabNode_<%= tabName %>_' + tabId;
-                app.templateName = '<%= tabName %>-template';
-                app.ready = function () {
-                    // debugger;
-                    // var tabNode = $('#<%=tabNode%>');
-                    // var $injector = angular.injector(['ng', 'tabsApp']);
-                    // var tabViewModelBuilder = $injector.get('tabViewModelBuilder');
-                    // tabViewModelBuilder.buildDynamicScope(app, tabNode,
-                    //     function (injector, scope) {
-                    //         // debugger;
-                    //         scope.message = 'Hello there !!!';
-                    //         scope.unloadModule = function () {
-                    //             setTimeout(function () {
-                    //                 // debugger;
-                    //                 module.dispose(tabId);
-                    //             }, 0);
-                    //         };
-                    //     });
-                    corelib.log('tabs', 'tab ' + tabId + ' loaded');
-                };
-                var sub1 = corelib.messageHub().subscribe('tab-close', function (msg) {
-                    var appNode = $(appNodeId);
-                    app.cleanup(appNode);
-                    app = null;
-                    appNode = null;
-                });
-                app.dispose = function () {
-                    corelib.messageHub().unsubscribe(sub1);
-                    corelib.log('tabs', 'tab ' + appId + ' disposed');
-                };
-
-            };
-        })
-        .runApp('<%= tabId %>');
-=======
-        getModule('tabs').registerTab1Content('<%= tabId %>', '<%= tabModule %>', '<%= tabNode %>');
->>>>>>> 20f1abf316b57bdd4768051d5c9b9bc00bb12282
+        corelib.jsLoader().loadBundle(['tabs/tab1/content.js'], '<%= tabModule %>_js', function () {
+            getModule('<%= tabModule %>').runApp('<%= tabId %>', {
+                tabNodeId: '<%= tabNode %>',
+            });
+        });
     </script>
 </div>

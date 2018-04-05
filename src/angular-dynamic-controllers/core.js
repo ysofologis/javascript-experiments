@@ -1,95 +1,52 @@
 !function (global, undefined) {
 
-    var createRef = function(instance) {
-        var _instance = instance;
-        var _refCount = 0;
-        return {
-            instance: function() {
-                _refCount = _refCount + 1;
-                return _instance;
-            },
-            release: function() {
-                if (_refCount) {
-                    _refCount = _refCount - 1;
-                    if (!_refCount) {
-                        _instance = null;
+    var makeModule = function (parentModule, name) {
+        var moduleRegistryBuilder = function() {
+            return {
+                modules: {},
+                create: function (moduleName) {
+                    if (!this.modules[moduleName]) {
+                        this.modules[moduleName] = {};
                     }
-                }
+                    return this.modules[moduleName];
+                },
+                update: function (moduleName, module) {
+                    this.modules[moduleName] = module;
+                },
+                destroy: function (moduleName) {
+                    if (this.modules[moduleName]) {
+                        delete this.modules[moduleName];
+                    }
+                },
+            };
+        };
+        function getModuleRegistry(module) {
+            if (!module['__modules__']) {
+                module['__modules__'] = moduleRegistryBuilder();
             }
-        };
-    };
-    var moduleRegistryBuilder = function() {
-        return {
-            modules: {},
-            create: function (moduleName) {
-                if (!this.modules[moduleName]) {
-                    this.modules[moduleName] = {};
-                }
-                return this.modules[moduleName];
-            },
-            update: function (moduleName, module) {
-                this.modules[moduleName] = module;
-            },
-            destroy: function (moduleName) {
-                if (this.modules[moduleName]) {
-                    delete this.modules[moduleName];
-                }
-            },
-        };
-    };
-    function getModuleRegistry(module) {
-        if (!module['__modules__']) {
-            module['__modules__'] = moduleRegistryBuilder();
+            return module['__modules__'];
         }
-<<<<<<< HEAD
-        return module['__modules__'];
-    }
-    var cleanupNode = function(node) {
-        if (node) {
-            node.removeData();
-            node.html('');
-            node.remove();
-=======
         function cleanupNode(node) {
             if (node) {
                 //setTimeout(function () {
-                    // $.event.remove(node);
-                    // node.removeData();
-                    // node.html('');
-                    // node[0].parentNode.removeChild(node[0]);
-                    node.html('');
-                    node.remove();
+                // $.event.remove(node);
+                // node.removeData();
+                // node.html('');
+                // node[0].parentNode.removeChild(node[0]);
+
+                // node.html('');
+                node.empty();
+                node.remove();
 
                 //}, 0);
             }
->>>>>>> 20f1abf316b57bdd4768051d5c9b9bc00bb12282
         }
-    };
-var makeModule = function (parentModule, name) {
         parentModule['__meta__'] = {
             name: name,
         };
         parentModule.getModule = function (moduleName) {
             var m = getModuleRegistry(parentModule).create(moduleName);
             return m;
-        };
-        parentModule.apps = {};
-        parentModule.runApp = function (appId) {
-<<<<<<< HEAD
-            var app = this.apps[appId];
-            if (!app) {
-                parentModule.registerApp(appId, {}, parentModule.appFactory);
-                app = this.apps[appId];
-            }
-            app.ready();
-        };
-        parentModule.registerModule = function (moduleName, initClosure) {
-            var module = getModuleRegistry(this).create(moduleName);
-            if (!module['__meta__']) {
-                makeModule(module, moduleName);
-=======
-            var app = parentModule.apps[appId];
-            app.ready();
         };
         parentModule.registerModule = function (moduleName, moduleInit) {
             var module = getModuleRegistry(parentModule).create(moduleName);
@@ -103,7 +60,6 @@ var makeModule = function (parentModule, name) {
                     delete parentModule[moduleName];
                     module = null;
                 };
->>>>>>> 20f1abf316b57bdd4768051d5c9b9bc00bb12282
                 module.cleanup = function (appId, appNode) {
                     if (this.apps[appId]) {
                         var app = this.apps[appId];
@@ -111,72 +67,43 @@ var makeModule = function (parentModule, name) {
                     }
                     if (Object.keys(this.apps).length == 0) {
                         this.destruct();
+                        cleanupNode(appNode);
                     }
                 };
-<<<<<<< HEAD
-                module.destruct = function () {
-                    if (this.dispose) {
-                        this.dispose();
-                    }
-                    var appIds = Object.keys(this.apps);
-                    for(var ix = 0; ix < appIds.length; ix ++) {
-                        var appId = appIds[ix];
-                        this.apps[appId].dispose();
-                    }
-                    delete parentModule[moduleName];
-                    getModuleRegistry(parentModule).destroy(moduleName);
-                };
-                        
-                this[moduleName] = module;
-                initClosure(module);
-            }
-            return module;
-        };
-        parentModule.registerApp = function (appName, appParams, initClosure) {
-            if (!this.apps[appName]) {
-                var app = this.apps[appName] = {};
-                app.name = appName;
-                app.params = appParams;
-=======
                 parentModule[moduleName] = module;
                 moduleInit(module);
             }
             return module;
         };
-        parentModule.registerApp = function (appName, appParams, appInit) {
+        parentModule.apps = {};
+        parentModule.runApp = function (appName, appParams) {
             if (!parentModule.apps[appName]) {
                 var app = parentModule.apps[appName] = {};
                 app.name = appName
-                app.params = appParams
->>>>>>> 20f1abf316b57bdd4768051d5c9b9bc00bb12282
-                app.cleanup = function (tabNode) {
+                app.params = appParams || {};
+                app.cleanup = function (appNode) {
                     if (this.angularScope) {
                         this.angularScope.$destroy();
                         this.angularScope = null
-                        // this.angularElem.remove();
+                        cleanupNode(p.angularElem);
+                        this.angularElem.remove();
                         this.angularElem = null
                     }
-                    if (this.dispose) {
-                        this.dispose();
-                    }
-                    cleanupNode(tabNode);
-                    delete parentModule.apps[appName];
-                    app = null;
+                    app.dispose();
+                    delete parentModule.apps[appName]
+                    app.ready = null;
+                    app.dispose = null;
+                    cleanupNode(appNode);
                 };
-
-                initClosure(app);
+                parentModule.appFactory(app);
+                app.ready();
             }
-<<<<<<< HEAD
-            return this;
-=======
-            return this.apps[appName];
->>>>>>> 20f1abf316b57bdd4768051d5c9b9bc00bb12282
         };
     };
 
     makeModule(global,'global');
 
-    registerModule('corelib', function (module) {
+    global.registerModule('corelib', function (module) {
         var _logRow = 0
         var _logTemplate = _.template('<%=row%>::<%=module%> >> <%=text%>');
         module.log = function (module, text, isError) {
@@ -189,10 +116,10 @@ var makeModule = function (parentModule, name) {
                 rowDiv.className = 'row error';
             }
             rowDiv.innerHTML = content
-            $('#app .log .rows').append(rowDiv)
+            $('#app .log').append(rowDiv)
         }
         module.clearLog = function () {
-            $('#app .log .rows .row').remove();
+            $('#app .log .row').remove();
             _logRow = 0;
         }
         var createMessageHub = function () {
@@ -247,6 +174,68 @@ var makeModule = function (parentModule, name) {
         var _messageHub = createMessageHub().start()
         module.messageHub = function () {
             return _messageHub
+        };
+        var createJSLoader = function () {
+            var _loadedBundles = {};
+            var _loader = {};
+            _loader.loadBundle = function (bundlerUrls, bundleName, loadedCallback) {
+                if (!_loadedBundles[bundleName]) {
+                    loadjs(bundlerUrls, bundleName);
+                    loadjs.ready(bundleName, function () {
+                        _loadedBundles[bundleName] = {
+                            loaded: true,
+                        };
+                        loadedCallback();
+                    });
+                } else {
+                    loadedCallback();
+                }
+            };
+            return _loader;
+        };
+        var _jsLoader = createJSLoader();
+        module.jsLoader = function () {
+            return _jsLoader;
+        };
+        module.AsyncChain = function () {
+            var that = this;
+            var _callbacks = [];
+
+            var asyncExecute = function(callback, callbackIterator, onComplete) {
+                setTimeout(function () {
+                    callback.callback();
+                    var nextCallback = callbackIterator.next();
+                    if (nextCallback) {
+                        asyncExecute(nextCallback, callbackIterator, onComplete);
+                    } else {
+                        onComplete();
+                    }
+                }, callback.delay);
+            };
+            that.addAsyncAction = function (actionCallback, actionDelay) {
+                _callbacks.push({
+                    callback: actionCallback,
+                    delay: actionDelay,
+                });
+            };
+            that.execute = function () {
+                if (_callbacks.length > 0) {
+                    var callbackIndex = 0;
+                    var callbackIterator = {
+                        next: function () {
+                            callbackIndex ++;
+                            if (callbackIndex < _callbacks.length) {
+                                return _callbacks[callbackIndex];
+                            } else {
+                                return null;
+                            }
+                        },
+                    };
+                    asyncExecute(_callbacks[0], callbackIterator, function () {
+                        _callbacks = [];
+                    });
+                }
+            };
         };
     });
 }(this);

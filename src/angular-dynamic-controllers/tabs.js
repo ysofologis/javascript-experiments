@@ -42,20 +42,19 @@ registerModule('tabs', function (module) {
             tabContainer = null;
         }
     };
-    var loadTab = function (tabName, tabId, content) {
+    var doLoadTab = function (tabName, tabId, content) {
         var templateFn = tabTemplates[tabName] || _.template(content);
         var context = {
             tabId: tabId,
             tabName: tabName,
-            tabNode: 'tabNode_' + tabName + '_' + tabId,
-            tabController: 'controller_' + tabName + '_' + tabId,
-            tabModule: 'module_' + tabName,
+            tabNode: tabName + '_' + tabId + '_node',
+            tabController: tabName + '_' + tabId + '_controller',
+            tabModule: tabName + '_module',
         };
-        var tabContent = $(templateFn(context));
+        var tabContent = templateFn(context);
         var tabContainer = $('#app .tab-container .tab-items');
         tabContainer.append(tabContent);
         tabTemplates[tabName] = tabTemplates[tabName] || templateFn;
-
         tabContainer = null;
         tabContent = null;
         context = null;
@@ -63,7 +62,7 @@ registerModule('tabs', function (module) {
     module.initTabs = function () {
         loadTabApp();
     };
-    module.loadTab = function (tabName) {
+    module.loadTab = function (tabName, loadCallback) {
         var tabUrl = 'tabs/' + tabName + '/content.html';
         var tabId = ++nextTabId;
         $.ajax({
@@ -71,14 +70,10 @@ registerModule('tabs', function (module) {
             type: 'GET',
             async: true,
             success: function (content) {
-<<<<<<< HEAD
-                loadTab(tabName, tabId, content);
-=======
-                var tabId = ++nextTabId;
-                setTimeout(function () {
-                    loadTab(tabName, tabId, content);
-                }, 0);
->>>>>>> 20f1abf316b57bdd4768051d5c9b9bc00bb12282
+                doLoadTab(tabName, tabId, content);
+                if (loadCallback) {
+                    loadCallback();
+                }
             },
             error: function (err) {
                 corelib.log('tabs', JSON.stringify(err), true);
