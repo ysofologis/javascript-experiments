@@ -1,0 +1,17 @@
+<div>
+  <mat-toolbar color="primary">
+    <span>Danaos TransferAPI Admin</span>
+
+    <button mat-icon-button [mat-menu-trigger-for]="menu">
+      <mat-icon>more_vert</mat-icon>
+    </button>
+  </mat-toolbar>
+  <mat-menu x-position="before" #menu="matMenu">
+    <button mat-menu-item>Option 1</button>
+    <button mat-menu-item>Option 2</button>
+  </mat-menu>
+
+  <mat-card>
+    <router-outlet></router-outlet>
+  </mat-card>
+</div>

@@ -41,6 +41,7 @@
         if (!module['__modules__']) {
             module['__modules__'] = moduleRegistryBuilder();
         }
+<<<<<<< HEAD
         return module['__modules__'];
     }
     var cleanupNode = function(node) {
@@ -48,6 +49,20 @@
             node.removeData();
             node.html('');
             node.remove();
+=======
+        function cleanupNode(node) {
+            if (node) {
+                //setTimeout(function () {
+                    // $.event.remove(node);
+                    // node.removeData();
+                    // node.html('');
+                    // node[0].parentNode.removeChild(node[0]);
+                    node.html('');
+                    node.remove();
+
+                //}, 0);
+            }
+>>>>>>> 20f1abf316b57bdd4768051d5c9b9bc00bb12282
         }
     };
 var makeModule = function (parentModule, name) {
@@ -55,11 +70,12 @@ var makeModule = function (parentModule, name) {
             name: name,
         };
         parentModule.getModule = function (moduleName) {
-            var m = getModuleRegistry(this).create(moduleName);
+            var m = getModuleRegistry(parentModule).create(moduleName);
             return m;
         };
         parentModule.apps = {};
         parentModule.runApp = function (appId) {
+<<<<<<< HEAD
             var app = this.apps[appId];
             if (!app) {
                 parentModule.registerApp(appId, {}, parentModule.appFactory);
@@ -71,15 +87,33 @@ var makeModule = function (parentModule, name) {
             var module = getModuleRegistry(this).create(moduleName);
             if (!module['__meta__']) {
                 makeModule(module, moduleName);
+=======
+            var app = parentModule.apps[appId];
+            app.ready();
+        };
+        parentModule.registerModule = function (moduleName, moduleInit) {
+            var module = getModuleRegistry(parentModule).create(moduleName);
+            if (!module['__meta__']) {
+                makeModule(module, moduleName);
+                module.destruct = function () {
+                    if (this.dispose) {
+                        this.dispose();
+                    }
+                    getModuleRegistry(parentModule).destroy(moduleName);
+                    delete parentModule[moduleName];
+                    module = null;
+                };
+>>>>>>> 20f1abf316b57bdd4768051d5c9b9bc00bb12282
                 module.cleanup = function (appId, appNode) {
                     if (this.apps[appId]) {
                         var app = this.apps[appId];
-                        app.angularTabCleanup(appNode);
+                        app.cleanup(appNode);
                     }
                     if (Object.keys(this.apps).length == 0) {
                         this.destruct();
                     }
                 };
+<<<<<<< HEAD
                 module.destruct = function () {
                     if (this.dispose) {
                         this.dispose();
@@ -103,6 +137,18 @@ var makeModule = function (parentModule, name) {
                 var app = this.apps[appName] = {};
                 app.name = appName;
                 app.params = appParams;
+=======
+                parentModule[moduleName] = module;
+                moduleInit(module);
+            }
+            return module;
+        };
+        parentModule.registerApp = function (appName, appParams, appInit) {
+            if (!parentModule.apps[appName]) {
+                var app = parentModule.apps[appName] = {};
+                app.name = appName
+                app.params = appParams
+>>>>>>> 20f1abf316b57bdd4768051d5c9b9bc00bb12282
                 app.cleanup = function (tabNode) {
                     if (this.angularScope) {
                         this.angularScope.$destroy();
@@ -120,7 +166,11 @@ var makeModule = function (parentModule, name) {
 
                 initClosure(app);
             }
+<<<<<<< HEAD
             return this;
+=======
+            return this.apps[appName];
+>>>>>>> 20f1abf316b57bdd4768051d5c9b9bc00bb12282
         };
     };
 
@@ -188,7 +238,7 @@ var makeModule = function (parentModule, name) {
                 start: function () {
                     window.addEventListener('message', function (evt) {
                         handleMessage(evt)
-                    })
+                    });
                     return _hub
                 }
             }
