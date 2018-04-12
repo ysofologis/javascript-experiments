@@ -24,8 +24,8 @@
     };
     var cleanupNode = function(n) {
         if (n) {
-            var node = n;
-            setTimeout(function () {
+            var node = $(n);
+            // setTimeout(function () {
                 $.event.remove(node);
                 node.removeData();
                 //node.html('');
@@ -34,7 +34,7 @@
                 // node.empty();
                 node.remove();
                 node = null;
-            }, 0);
+            // }, 0);
         }
     };
 
@@ -90,7 +90,7 @@
             app.name = appName;
             app.params = appParams ? Object.create(appParams) : {};
             app.startAngular = function (appNodeId, appController) {
-                appNode = $('#' + appNodeId);
+                appNode = document.getElementById(appNodeId);
                 var $injector = angular.injector(['ng', 'tabsApp']);
                 var tabViewModelBuilder = $injector.get('tabViewModelBuilder');
                 tabViewModelBuilder.buildDynamicScope(app, appNode, appController);
@@ -120,7 +120,7 @@
             if (!parentModule.apps[appName]) {
                 var app = new AppSkeleton(parentModule, appName, appParams);
                 parentModule.apps[appName] = app;
-                parentModule.appFactory(app);
+                parentModule.appBuilder(app);
                 app.ready();
             }
         };
@@ -154,11 +154,12 @@
             }
             rowDiv.innerHTML = content;
             $('#app .log .rows').append(rowDiv);
-        }
+        };
         module.clearLog = function () {
             $('#app .log .rows .row').remove();
             _logRow = 0;
-        }
+        };
+
         var createMessageHub = function () {
             var _subscriptions = [];
 
@@ -210,7 +211,7 @@
             }
             return _hub
         };
-        var _messageHub = createMessageHub().start()
+        var _messageHub = createMessageHub().start();
         module.messageHub = function () {
             return _messageHub
         };

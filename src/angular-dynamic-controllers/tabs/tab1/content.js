@@ -2,7 +2,7 @@ registerModule('tab1_module', function (module) {
 
     var corelib = importModule('corelib');
 
-    module.appFactory = function (appInstance) {
+    module.appBuilder = function (appInstance) {
 
         var app = appInstance;
         var appId = app.name;
@@ -22,6 +22,7 @@ registerModule('tab1_module', function (module) {
             app.startAngular(tabNodeId, scopeBuilder);
             corelib.log('tabs', 'tab ' + appId + ' loaded');
         };
+
         var sub1 = corelib.messageHub().subscribe('tab-close', function handleTabClosed(msg) {
             app.cleanup();
             app = null;

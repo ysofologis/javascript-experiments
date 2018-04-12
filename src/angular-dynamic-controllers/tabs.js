@@ -17,7 +17,7 @@ registerModule('tabs', function (module) {
                                 scopeBuilder($injector, newScope);
                                 // $controller('tabViewModelController', {$scope: newScope});
                                 app.angularScope = newScope;
-                                app.angularElem = $compile(tabNode[0])(newScope);
+                                app.angularElem = $compile(tabNode)(newScope);
                                 newScope.$apply();
                             },
                         };
@@ -52,10 +52,14 @@ registerModule('tabs', function (module) {
             tabNode: tabName + '_' + tabId + '_node',
             tabController: tabName + '_' + tabId + '_controller',
             tabModule: tabName + '_module',
+            tabScripts: ['tabs/' + tabName + '/content.js']
         };
         var tabContent = templateFn(context);
         var tabContainer = $('#app .tab-container .tab-items');
+
         tabContainer.append(tabContent);
+        // corelib.messageHub().broadcast('tab-start', context);
+
         _tabTemplates[tabName] = _tabTemplates[tabName] || templateFn;
         tabContainer = null;
         tabContent = null;
