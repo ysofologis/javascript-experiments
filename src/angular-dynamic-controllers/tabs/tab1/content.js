@@ -8,16 +8,18 @@ registerModule('tab1_module', function (module) {
         var appId = app.name;
         var tabNodeId = app.params.nodeId;
 
+        var scopeBuilder = function(injector, scope) {
+            scope.message = 'Hello from ' + appId + ' !!';
+            scope.unloadApp = function () {
+                corelib.runAsync(function () {
+                    app.cleanup();
+                    app = null;
+                });
+            };
+        };
+
         app.ready = function () {
-            app.startAngular(tabNodeId, function (injector, scope) {
-                scope.message = 'Hello from ' + appId + ' !!';
-                scope.unloadApp = function () {
-                    corelib.runAsync(function () {
-                        app.cleanup();
-                        app = null;
-                    });
-                };
-            });
+            app.startAngular(tabNodeId, scopeBuilder);
             corelib.log('tabs', 'tab ' + appId + ' loaded');
         };
         var sub1 = corelib.messageHub().subscribe('tab-close', function handleTabClosed(msg) {

@@ -30,8 +30,8 @@
                 node.removeData();
                 //node.html('');
                 //node[0].parentNode.removeChild(node[0]);
-                // node.html('');
-                node.empty();
+                node.html('');
+                // node.empty();
                 node.remove();
                 node = null;
             }, 0);
@@ -112,11 +112,9 @@
                     app.dispose();
                 }
                 delete appModule.apps[appName];
-                delete app;
                 app = null;
                 appModule = null;
             };
-            return app;
         };
         parentModule.runApp = function (appName, appParams) {
             if (!parentModule.apps[appName]) {
