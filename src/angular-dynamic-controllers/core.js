@@ -1,63 +1,67 @@
 !function (global, undefined) {
 
-    var makeModule = function (parentModule, name) {
-        var moduleRegistryBuilder = function() {
-            return {
-                modules: {},
-                create: function (moduleName) {
-                    if (!this.modules[moduleName]) {
-                        this.modules[moduleName] = {};
-                    }
-                    return this.modules[moduleName];
-                },
-                update: function (moduleName, module) {
-                    this.modules[moduleName] = module;
-                },
-                destroy: function (moduleName) {
-                    if (this.modules[moduleName]) {
-                        delete this.modules[moduleName];
-                    }
-                },
-            };
+    var moduleRegistryBuilder = function () {
+        return {
+            modules: {},
+            create: function (moduleName) {
+                if (!this.modules[moduleName]) {
+                    this.modules[moduleName] = {};
+                }
+                return this.modules[moduleName];
+            },
+            get: function(moduleName) {
+                return this.modules[moduleName];
+            },
+            update: function (moduleName, module) {
+                this.modules[moduleName] = module;
+            },
+            destroy: function (moduleName) {
+                if (this.modules[moduleName]) {
+                    delete this.modules[moduleName];
+                }
+            },
         };
-        function getModuleRegistry(module) {
-            if (!module['__modules__']) {
-                module['__modules__'] = moduleRegistryBuilder();
-            }
-            return module['__modules__'];
-        }
-        function cleanupNode(node) {
-            if (node) {
-                //setTimeout(function () {
+    };
+    var cleanupNode = function(n) {
+        if (n) {
+            var node = n;
+            setTimeout(function () {
                 $.event.remove(node);
                 node.removeData();
+                //node.html('');
+                //node[0].parentNode.removeChild(node[0]);
                 // node.html('');
-                // node[0].parentNode.removeChild(node[0]);
-
-                node.html('');
                 node.empty();
                 node.remove();
-
-                //}, 0);
-            }
+                node = null;
+            }, 0);
         }
+    };
+
+    var ModuleSkeleton = function (name) {
+        var  parentModule = this;
+        var  moduleRegistry = moduleRegistryBuilder();
+
         parentModule['__meta__'] = {
             name: name,
         };
-        parentModule.getModule = function (moduleName) {
-            var m = getModuleRegistry(parentModule).create(moduleName);
+        parentModule['__modules__'] = moduleRegistry;
+
+        parentModule.importModule = function (moduleName) {
+            var m = moduleRegistry.get(moduleName);
             return m;
         };
-        parentModule.registerModule = function (moduleName, moduleInit) {
-            var module = getModuleRegistry(parentModule).create(moduleName);
-            if (!module['__meta__']) {
-                makeModule(module, moduleName);
+        parentModule.registerModule = function (moduleName, moduleInitFn) {
+            var moduleInit = moduleInitFn;
+            var module = moduleRegistry.get(moduleName);
+            if (!module) {
+                module = new ModuleSkeleton(moduleName);
                 module.destruct = function () {
                     if (this.dispose) {
                         this.dispose();
                     }
-                    getModuleRegistry(parentModule).destroy(moduleName);
-                    delete parentModule[moduleName];
+                    moduleRegistry.destroy(moduleName);
+                    // delete parentModule[moduleName];
                     module = null;
                 };
                 module.cleanup = function (appId, appNode) {
@@ -70,55 +74,73 @@
                         cleanupNode(appNode);
                     }
                 };
-                parentModule[moduleName] = module;
+                // this[moduleName] = module;
                 moduleInit(module);
+                moduleInit = null;
+                moduleRegistry.update(moduleName, module);
             }
             return module;
         };
         parentModule.apps = {};
+
+        var AppSkeleton = function (ownerModule, appName, appParams) {
+            var app = this;
+            var appModule = ownerModule;
+            var appNode = null;
+            app.name = appName;
+            app.params = appParams ? Object.create(appParams) : {};
+            app.startAngular = function (appNodeId, appController) {
+                appNode = $('#' + appNodeId);
+                var $injector = angular.injector(['ng', 'tabsApp']);
+                var tabViewModelBuilder = $injector.get('tabViewModelBuilder');
+                tabViewModelBuilder.buildDynamicScope(app, appNode, appController);
+                tabViewModelBuilder = null;
+                $injector = null;
+            };
+            app.cleanup = function () {
+                if (app.angularScope) {
+                    app.angularScope.$destroy();
+                    // cleanupNode(this.angularElem);
+                    app.angularScope = null;
+                    app.angularElem = null;
+                    cleanupNode(appNode);
+                    appNode = null;
+                    app.dispose();
+                } else {
+                    cleanupNode(appNode);
+                    appNode = null;
+                    app.dispose();
+                }
+                delete appModule.apps[appName];
+                delete app;
+                app = null;
+                appModule = null;
+            };
+            return app;
+        };
         parentModule.runApp = function (appName, appParams) {
             if (!parentModule.apps[appName]) {
-                var app = parentModule.apps[appName] = {};
-                app.name = appName
-                app.params = appParams || {};
-                app.startAngular = function(appNodeId, appController) {
-                    var tabNode = $('#' + appNodeId);
-                    var $injector = angular.injector(['ng', 'tabsApp']);
-                    var tabViewModelBuilder = $injector.get('tabViewModelBuilder');
-                    tabViewModelBuilder.buildDynamicScope(app, tabNode, appController);
-                    tabNode = null;
-                };
-                app.cleanup = function (appNode) {
-                    if (this.angularScope) {
-                        this.angularScope.$destroy();
-                        this.angularScope = null
-                        // cleanupNode(this.angularElem);
-                        this.angularElem = null
-                    }
-                    app.dispose();
-                    delete parentModule.apps[appName]
-                    cleanupNode(appNode);
-
-                    app.startAngular = null;
-                    app.dispose = null;
-                    app.ready = null;
-                    app.cleanup = null;
-                    app = null;
-                };
+                var app = new AppSkeleton(parentModule, appName, appParams);
+                parentModule.apps[appName] = app;
                 parentModule.appFactory(app);
                 app.ready();
             }
         };
     };
 
-    makeModule(global,'global');
+    var globalModule = new ModuleSkeleton('global');
+    _.extend(global, globalModule);
+
 
     global.registerModule('corelib', function (module) {
 
         module.runAsync = function (callback, delay) {
-            setTimeout(function () {
-                callback();
-            }, delay || 0)
+            !function (fn, d) {
+                setTimeout(function () {
+                    fn();
+                    fn = null;
+                }, d || 0)
+            }(callback, delay);
         };
 
         var _logRow = 0
@@ -132,20 +154,22 @@
             if (isError) {
                 rowDiv.className = 'row error';
             }
-            rowDiv.innerHTML = content
-            $('#app .log .rows').append(rowDiv)
+            rowDiv.innerHTML = content;
+            $('#app .log .rows').append(rowDiv);
         }
         module.clearLog = function () {
             $('#app .log .rows .row').remove();
             _logRow = 0;
         }
         var createMessageHub = function () {
-            var _subscriptions = []
+            var _subscriptions = [];
 
             var runCallback = function (callback, payload) {
-                module.runAsync(function () {
-                    callback(payload)
-                });
+                !function(cb, p) {
+                    setTimeout(function () {
+                        cb(p)
+                    }, 0);
+                }(callback, payload);
             };
             var handleMessage = function (evt) {
                 if (evt.data && typeof evt.data == 'string') {
@@ -193,19 +217,30 @@
             return _messageHub
         };
         var createJSLoader = function () {
-            var _loadedBundles = {};
-            var _loader = {};
-            _loader.loadBundle = function (bundlerUrls, bundleName, loadedCallback) {
-                if (!_loadedBundles[bundleName]) {
+            var _loader = {
+                bundles: {},
+            };
+            _loader.loadBundle = function (bundleName, bundlerUrls, loadedCallback) {
+                var cb = loadedCallback;
+                if (!_loader.bundles[bundleName]) {
                     loadjs(bundlerUrls, bundleName);
-                    loadjs.ready(bundleName, function () {
-                        _loadedBundles[bundleName] = {
+                    loadjs.ready(bundleName, function jsReady() {
+                        _loader.bundles[bundleName] = {
                             loaded: true,
                         };
-                        loadedCallback();
+                        cb();
+                        cb = null;
                     });
                 } else {
-                    loadedCallback();
+                    cb();
+                    cb = null;
+                }
+            };
+            _loader.isLoaded = function (bundleName) {
+                if (_loader.bundles[bundleName]) {
+                    return true;
+                } else {
+                    return false;
                 }
             };
             return _loader;
@@ -218,16 +253,18 @@
             var that = this;
             var _callbacks = [];
 
-            var asyncExecute = function(callback, callbackIterator, onComplete) {
-                setTimeout(function () {
-                    callback.callback();
-                    var nextCallback = callbackIterator.next();
-                    if (nextCallback) {
-                        asyncExecute(nextCallback, callbackIterator, onComplete);
-                    } else {
-                        onComplete();
-                    }
-                }, callback.delay);
+            var asyncExecute = function (callback, callbackIterator, onComplete) {
+                !function(cb, cbIter, completed) {
+                    setTimeout(function () {
+                        cb.callback();
+                        var nextCallback = cbIter.next();
+                        if (nextCallback) {
+                            asyncExecute(nextCallback, cbIter, completed);
+                        } else {
+                            completed();
+                        }
+                    }, cb.delay);
+                }(callback, callbackIterator, onComplete);
             };
             that.addAsyncAction = function (actionCallback, actionDelay) {
                 _callbacks.push({
@@ -237,25 +274,44 @@
             };
             that.execute = function () {
                 if (_callbacks.length > 0) {
-                    var callbackIndex = 0;
                     var callbackIterator = {
+                        callbacks: _callbacks,
+                        maxIndex: _callbacks.length,
+                        index: 0,
                         next: function () {
-                            callbackIndex ++;
-                            if (callbackIndex < _callbacks.length) {
-                                return _callbacks[callbackIndex];
+                            this.index ++;
+                            if (this.index < this.maxIndex) {
+                                return this.callbacks[this.index];
                             } else {
                                 return null;
                             }
                         },
+                        dispose: function () {
+                            this.callbacks = [];
+                        },
                     };
                     asyncExecute(_callbacks[0], callbackIterator, function () {
-                        _callbacks.forEach( function (c) {
-                            c.callback =  null;
+                        _callbacks.forEach(function (c) {
+                            c.callback = null;
                         });
                         _callbacks = [];
+                        callbackIterator.dispose();
+                        callbackIterator = null;
                     });
                 }
             };
+        };
+        module.loadTabApp = function (tabModule, tabScripts, tabId, tabNodeId) {
+            var moduleName = tabModule;
+            var bundleName = moduleName + '_js';
+
+            if (!_jsLoader.isLoaded(bundleName)) {
+                _jsLoader.loadBundle(bundleName, tabScripts, function handleTabLoad() {
+                    importModule(moduleName).runApp(tabId, {nodeId: tabNodeId});
+                });
+            } else {
+                importModule(moduleName).runApp(tabId, {nodeId: tabNodeId});
+            }
         };
     });
 }(this);

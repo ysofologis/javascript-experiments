@@ -1,4 +1,5 @@
 registerModule('tabs', function (module) {
+    var corelib = importModule('corelib');
     var nextTabId = 0;
     var tabApp = null;
     var _tabTemplates = {};
@@ -14,7 +15,7 @@ registerModule('tabs', function (module) {
                             buildDynamicScope: function (app, tabNode, scopeBuilder) {
                                 var newScope = $rootScope.$new(true);
                                 scopeBuilder($injector, newScope);
-                                $controller('tabViewModelController', {$scope: newScope});
+                                // $controller('tabViewModelController', {$scope: newScope});
                                 app.angularScope = newScope;
                                 app.angularElem = $compile(tabNode[0])(newScope);
                                 newScope.$apply();
@@ -28,7 +29,6 @@ registerModule('tabs', function (module) {
                 .controller('tabViewModelController', ['$scope',
                     function ($scope) {
                         // tabViewModelBuilder.buildScope($scope);
-                        console.log('Hello from tabViewModelController');
                     }]);
             var angularAppNode = $('#app .tab-container .angular-tab-app');
             var dynamicTabContainer = $('#dynamic-load-container');
@@ -65,6 +65,12 @@ registerModule('tabs', function (module) {
         loadTabApp();
     };
     module.loadTab = function (tabName, loadCallback) {
+        var tabContents = $('#app .tab-container .tab-items .tab-content');
+        if (tabContents.length == 0) {
+            nextTabId = 0;
+        }
+        tabContents = null;
+
         var tabId = ++nextTabId;
         if (!_tabContents[tabName]) {
             var tabUrl = 'tabs/' + tabName + '/content.html';

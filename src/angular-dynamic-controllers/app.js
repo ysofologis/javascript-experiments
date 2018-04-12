@@ -1,9 +1,9 @@
 
 registerModule('theApp', function (module) {
+    var tabs = importModule('tabs');
+    var corelib = importModule('corelib');
+
      module.start = function () {
-        $.ajaxSetup ({
-            cache: false
-        });
 
         angular.module('rootApp', []).controller('menuController', function ($scope) {
             $scope.title = 'This is supposed to be the main menu';
@@ -34,9 +34,10 @@ registerModule('theApp', function (module) {
                 corelib.clearLog();
             };
         });
-        var rootNode = $('#app')[0];
-        angular.bootstrap(rootNode, ['rootApp']);
+        var rootApp = $('#app');
+        angular.bootstrap(rootApp[0], ['rootApp']);
         corelib.log('app', 'started');
         tabs.initTabs();
+        rootApp = null;
      };
 });

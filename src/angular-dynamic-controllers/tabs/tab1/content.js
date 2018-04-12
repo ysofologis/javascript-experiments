@@ -1,39 +1,33 @@
 registerModule('tab1_module', function (module) {
 
-    var appCleanup = function(anApp) {
-        var appNode = $('#' + anApp.params.tabNodeId);
-        anApp.cleanup(appNode);
-        corelib.log('tabs', 'tab ' + anApp.name + ' clean');
-        appNode = null;
-    };
+    var corelib = importModule('corelib');
 
-    module.appFactory = function (app) {
+    module.appFactory = function (appInstance) {
+
+        var app = appInstance;
         var appId = app.name;
-        var appNodeId = app.params.tabNodeId;
+        var tabNodeId = app.params.nodeId;
 
         app.ready = function () {
-            app.startAngular(appNodeId, function (injector, scope) {
+            app.startAngular(tabNodeId, function (injector, scope) {
                 scope.message = 'Hello from ' + appId + ' !!';
                 scope.unloadApp = function () {
                     corelib.runAsync(function () {
-                        appCleanup(app);
+                        app.cleanup();
                         app = null;
                     });
                 };
             });
             corelib.log('tabs', 'tab ' + appId + ' loaded');
         };
-        var sub1 = corelib.messageHub().subscribe('tab-close', function (msg) {
-            corelib.runAsync(function () {
-                appCleanup(app);
-                app = null;
-            });
+        var sub1 = corelib.messageHub().subscribe('tab-close', function handleTabClosed(msg) {
+            app.cleanup();
+            app = null;
         });
 
         app.dispose = function () {
             corelib.messageHub().unsubscribe(sub1);
             corelib.log('tabs', 'app [' + appId + '] unloaded');
-            sub1 = null;
         };
     };
 });
