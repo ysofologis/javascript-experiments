@@ -25,7 +25,7 @@
     var cleanupNode = function(n) {
         if (n) {
             var node = $(n);
-            // setTimeout(function () {
+            setTimeout(function () {
                 $.event.remove(node);
                 node.removeData();
                 //node.html('');
@@ -34,7 +34,7 @@
                 // node.empty();
                 node.remove();
                 node = null;
-            // }, 0);
+            }, 0);
         }
     };
 
@@ -100,7 +100,7 @@
             app.cleanup = function () {
                 if (app.angularScope) {
                     app.angularScope.$destroy();
-                    // cleanupNode(this.angularElem);
+                    cleanupNode(this.angularElem);
                     app.angularScope = null;
                     app.angularElem = null;
                     cleanupNode(appNode);
@@ -120,7 +120,7 @@
             if (!parentModule.apps[appName]) {
                 var app = new AppSkeleton(parentModule, appName, appParams);
                 parentModule.apps[appName] = app;
-                parentModule.appBuilder(app);
+                parentModule.appBuilder({ instance: app });
                 app.ready();
             }
         };
@@ -200,16 +200,16 @@
                     window.postMessage(JSON.stringify({
                         messageType: messageType,
                         payload: message
-                    }), window.location.origin)
+                    }), window.location.origin);
                 },
                 start: function () {
                     window.addEventListener('message', function (evt) {
                         handleMessage(evt)
                     });
-                    return _hub
+                    return _hub;
                 }
             }
-            return _hub
+            return _hub;
         };
         var _messageHub = createMessageHub().start();
         module.messageHub = function () {

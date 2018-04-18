@@ -9,8 +9,8 @@ registerModule('tabs', function (module) {
         if (!tabApp) {
             var app = angular.module('tabsApp', []).config(function ($controllerProvider) {
             })
-                .service('tabViewModelBuilder', ['$injector', '$compile', '$rootScope', '$controller',
-                    function ($injector, $compile, $rootScope, $controller) {
+                .service('tabViewModelBuilder', ['$injector', '$compile', '$rootScope',
+                    function ($injector, $compile, $rootScope) {
                         return {
                             buildDynamicScope: function (app, tabNode, scopeBuilder) {
                                 var newScope = $rootScope.$new(true);

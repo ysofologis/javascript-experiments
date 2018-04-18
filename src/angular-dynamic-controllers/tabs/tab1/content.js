@@ -2,9 +2,9 @@ registerModule('tab1_module', function (module) {
 
     var corelib = importModule('corelib');
 
-    module.appBuilder = function (appInstance) {
+    module.appBuilder = function (appRef) {
 
-        var app = appInstance;
+        var app = appRef.instance;
         var appId = app.name;
         var tabNodeId = app.params.nodeId;
 
