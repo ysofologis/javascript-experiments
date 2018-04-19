@@ -31,16 +31,25 @@ html, body {
 #app .tab-container .tab-content {
     clear: both;
     background-color: #ddd;
-    line-height: 40px;
+    /*line-height: 40px;*/
     height: 40px;
     vertical-align: middle;
-    margin-top: 5px;    
+    margin-top: 5px;
+    width: 100%;
 }
+
+#app .tab-container .tab-controller {
+    height: 100%;
+    width: 100%;
+    overflow: auto;
+}
+
 #app .tab-container .tab-body {
-    float: left;
+    width: auto;
 }
 #app .tab-container .tab-head {
-    float: right;
+    float: left;
+    width: 80px;
 }
 
 

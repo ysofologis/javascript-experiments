@@ -1,48 +1,74 @@
 registerModule('tabs', function (module) {
     var corelib = importModule('corelib');
     var nextTabId = 0;
-    var tabApp = null;
     var _tabTemplates = {};
     var _tabContents = {};
+    var _ngTemplates = {};
 
-    var loadTabApp = function () {
-        if (!tabApp) {
-            var app = angular.module('tabsApp', []).config(function ($controllerProvider) {
-            })
-                .service('tabViewModelBuilder', ['$injector', '$compile', '$rootScope',
-                    function ($injector, $compile, $rootScope) {
-                        return {
-                            buildDynamicScope: function (app, tabNode, scopeBuilder) {
-                                var newScope = $rootScope.$new(true);
-                                scopeBuilder($injector, newScope);
-                                // $controller('tabViewModelController', {$scope: newScope});
-                                app.angularScope = newScope;
-                                app.angularElem = $compile(tabNode)(newScope);
+    var tabBuilder = function (app, tabNode, scopeBuilder) {
+        var tabHtml = tabNode.html();
+        var appName = 'ng-' + app.moduleName + '-' + app.name;
+        var ctrlName = appName + '-rootCtrl';
+        var appContent = $(tabHtml);
+        angular.module(appName, [])
+            .controller(ctrlName, ['$injector', '$scope',
+                function ($injector, $scope) {
+                    scopeBuilder($injector, $scope);
+                    scopeBuilder = null;
+                }]);
+        appContent.first().attr({'ng-controller': ctrlName });
+        tabNode.appendTo('#dynamic-load-container');
+        tabNode.empty();
+        tabNode.append(appContent);
+        app.angularApp = angular.bootstrap(tabNode[0], [appName]);
+        tabNode.appendTo('.tab-container .tab-items');
+        appContent = null;
+
+        var rootScope = app.angularApp.get('$rootScope');
+        rootScope.$apply();
+    };
+
+    var loadTabServices = function (rootApp) {
+        rootApp
+            .factory('tabAppBuilder', ['$injector', '$compile', '$rootScope',
+                function ($injector, $compile, $rootScope) {
+                    var _builder = {
+                        buildAppScope: function (app, tabNode, scopeBuilder) {
+                            // $controller('tabViewModelController', {$scope: newScope});
+
+                            var newScope = $rootScope.$new(true);
+                            scopeBuilder($injector, newScope);
+                            app.angularScope = newScope;
+
+                            var tabTemplate = _ngTemplates[app.moduleName];
+                            if (!tabTemplate) {
+                                var angularTemplate = tabNode.html();
+                                tabTemplate = $compile(angularTemplate);
+                                _ngTemplates[app.moduleName] = tabTemplate;
+
+                                app.angularElem = tabTemplate(newScope);
+                                tabNode.find(".tab-controller").replaceWith(app.angularElem);
                                 newScope.$apply();
-                            },
-                        };
-                    }])
-                .controller('rootTabController', ['$scope', '$compile', 'tabViewModelBuilder',
-                    function ($scope, $compile, tabViewModelBuilder) {
-                        $scope.isMock = false;
-                    }])
-                .controller('tabViewModelController', ['$scope',
-                    function ($scope) {
-                        // tabViewModelBuilder.buildScope($scope);
-                    }]);
-            var angularAppNode = $('#app .tab-container .angular-tab-app');
-            var dynamicTabContainer = $('#dynamic-load-container');
-            var tabContainer = $('#app .tab-container');
-
-            angularAppNode.appendTo(dynamicTabContainer);
-            angular.bootstrap(angularAppNode[0], ['tabsApp']);
-            tabApp = app;
-            angularAppNode.appendTo(tabContainer);
-            corelib.log('tabs', 'initialized');
-            angularAppNode = null;
-            dynamicTabContainer = null;
-            tabContainer = null;
-        }
+                                newScope = null;
+                            } else {
+                                tabTemplate(newScope, function (clone, scope) {
+                                    app.angularElem = clone;
+                                    tabNode.find(".tab-controller").replaceWith(app.angularElem);
+                                    scope.$apply();
+                                    scope = null;
+                                });
+                            }
+                        },
+                        buildTabApp: function (app, tabNode, scopeBuilder) {
+                            tabBuilder(app, tabNode, scopeBuilder);
+                        },
+                    };
+                    return _builder;
+                }])
+            .controller('tabControlCtrl', ['$scope', '$compile', 'tabAppBuilder',
+                function ($scope) {
+                    $scope.name = 'tabControlCtrl';
+                }]);
     };
     var doLoadTab = function (tabName, tabId, content) {
         var templateFn = _tabTemplates[tabName] || _.template(content);
@@ -65,8 +91,9 @@ registerModule('tabs', function (module) {
         tabContent = null;
         context = null;
     };
-    module.initTabs = function () {
-        loadTabApp();
+
+    module.initTabs = function (rootApp) {
+        loadTabServices(rootApp);
     };
     module.loadTab = function (tabName, loadCallback) {
         var tabContents = $('#app .tab-container .tab-items .tab-content');
@@ -84,13 +111,15 @@ registerModule('tabs', function (module) {
                 async: true,
                 cache: false,
                 success: function (content) {
-                    _tabContents[tabName] = {
-                        content: content,
-                    };
-                    doLoadTab(tabName, tabId, content);
-                    if (loadCallback) {
-                        loadCallback();
-                    }
+                    // _tabContents[tabName] = {
+                    //     content: content,
+                    // };
+                    setTimeout(() => {
+                        doLoadTab(tabName, tabId, content);
+                        if (loadCallback) {
+                            loadCallback();
+                        }
+                    }, 0);
                 },
                 error: function (err) {
                     corelib.log('tabs', JSON.stringify(err), true);

@@ -2,16 +2,29 @@ registerModule('tab1_module', function (module) {
 
     var corelib = importModule('corelib');
 
-    module.appBuilder = function (appRef) {
+    module.appBuilder = function (app) {
 
-        var app = appRef.instance;
         var appId = app.name;
         var tabNodeId = app.params.nodeId;
 
         var scopeBuilder = function(injector, scope) {
-            scope.message = 'Hello from ' + appId + ' !!';
-            scope.unloadApp = function () {
-                corelib.runAsync(function () {
+
+            var vm = scope;
+            vm.message = 'Hello from ' + appId + ' !!';
+            vm.prop01 = "prop01";
+            vm.prop02 = "prop02";
+            vm.prop03 = "prop03";
+            vm.prop04 = "prop04";
+            vm.prop05 = "prop05";
+            vm.prop06 = "prop06";
+            vm.prop07 = "prop07";
+            vm.prop08 = "prop08";
+            vm.prop09 = "prop09";
+            vm.prop10 = "prop10";
+
+            vm.unloadApp = function () {
+                vm = null;
+                setTimeout(() => {
                     app.cleanup();
                     app = null;
                 });
