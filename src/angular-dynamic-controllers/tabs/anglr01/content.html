@@ -20,12 +20,12 @@
     </div>
 
     <script type="text/javascript">
-        // importModule('corelib').loadTabApp('tab1_module', ['tabs/tab1/content.js'], '<%= tabId %>', '<%= tabNode %>');
+        // importModule('corelib').loadTabApp('anglr01_module', ['tabs/tab1/content.js'], '<%= tabId %>', '<%= tabNode %>');
         window.postMessage(JSON.stringify({
             messageType: 'tab-start',
             payload: {
-                tabModule: 'tab1_module',
-                tabScripts: ['tabs/tab1/content.js'],
+                tabModule: 'anglr01_module',
+                tabScripts: ['tabs/anglr01/content.js'],
                 tabId: '<%= tabId %>',
                 tabNode: '<%= tabNode %>',
             },
@@ -33,3 +33,4 @@
     </script>
 
 </div>
+

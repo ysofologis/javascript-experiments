@@ -1,0 +1,35 @@
+<div id='<%= tabNode %>' class='tab-content'>
+
+    <div class="tab-controller">
+        <div class="tab-head">
+            <button class="btn-close">No Close</button>
+        </div>
+        <div class='tab-body'>
+            <span class="message"></span>
+            <span class="prop01"></span>
+            <span class="prop02"></span>
+            <span class="prop03"></span>
+            <span class="prop04"></span>
+            <span class="prop05"></span>
+            <span class="prop06"></span>
+            <span class="prop07"></span>
+            <span class="prop08"></span>
+            <span class="prop09"></span>
+            <span class="prop10"></span>
+        </div>
+    </div>
+
+    <script type="text/javascript">
+        // importModule('corelib').loadTabApp('anglr01_module', ['tabs/tab1/content.js'], '<%= tabId %>', '<%= tabNode %>');
+        window.postMessage(JSON.stringify({
+            messageType: 'tab-start',
+            payload: {
+                tabModule: 'noframewrk_module',
+                tabScripts: ['tabs/noframewrk/content.js'],
+                tabId: '<%= tabId %>',
+                tabNode: '<%= tabNode %>',
+            },
+        }), window.location.origin);
+    </script>
+
+</div>

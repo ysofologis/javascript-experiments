@@ -3,47 +3,56 @@ registerModule('theApp', function (module) {
     var corelib = importModule('corelib');
 
     var doLoadTab = function (tabName) {
-        setTimeout(() => {
+        corelib.runAsync(() => {
             tabs.loadTab(tabName);
-        },0);
+        });
     };
 
-    var sub1 = corelib.messageHub().subscribe('tab-start', function handleTabStart(payload) {
+    var sub1 = corelib.messageHub().subscribe('tab-start', function (payload) {
         corelib.loadTabApp(payload.tabModule, payload.tabScripts, payload.tabId, payload.tabNode);
     });
 
     module.start = function () {
 
         var ngApp = angular.module('rootApp', [])
-            .controller('menuController', function ($scope) {
-            $scope.title = 'This is supposed to be the main menu';
-            $scope.menuItems = [];
-            $scope.loadTab = function (tabName) {
-                doLoadTab(tabName);
-            };
-            $scope.loadTabs = function (tabName, howMany) {
-                for (var ix = 0; ix < howMany; ix++) {
-                    //asyncChain.addAsyncAction(function () {
-                    doLoadTab(tabName);
-                    //}, 50)
-                }
-            };
-            $scope.closeAllTabs = function () {
-                corelib.messageHub().broadcast('tab-close', {});
-            };
+            .factory('tabLauncher', function () {
+                return {
+                    loadTab: function (tabName) {
+                        doLoadTab(tabName);
+                    },
+                    closeAll: function () {
+                        corelib.messageHub().broadcast('tab-close', {});
+                    },
+                };
+            })
+            .controller('menuController', function (tabLauncher, $scope) {
 
-        }).controller('rootTabController', function ($scope) {
-            $scope.isMock = true;
-        }).controller('logController', function ($scope) {
-            $scope.clearLog = function () {
-                corelib.clearLog();
-            };
-        });
+                $scope.title = 'This is supposed to be the main menu';
+                $scope.menuItems = [];
+                $scope.loadTab = function (tabName) {
+                    tabLauncher.loadTab(tabName);
+                };
+                $scope.loadTabs = function (tabName, howMany) {
+                    for (var ix = 0; ix < howMany; ix++) {
+                        tabLauncher.loadTab(tabName);
+                    }
+                };
+                $scope.closeAllTabs = function () {
+                    tabLauncher.closeAll();
+                };
+
+            }).controller('rootTabController', function ($scope) {
+
+            }).controller('logController', function ($scope) {
+                $scope.clearLog = function () {
+                    corelib.clearLog();
+                };
+            });
         tabs.initTabs(ngApp);
         var rootApp = $('#app');
         angular.bootstrap(rootApp[0], ['rootApp']);
         corelib.log('app', 'started');
-        doLoadTab('tab1');
+        // doLoadTab('anglr01');
     };
     module.dispose = function () {
         corelib.messageHub().unsubscribe(sub1);

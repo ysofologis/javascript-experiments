@@ -1,127 +1,151 @@
-!function (global, undefined) {
-
-    var moduleRegistryBuilder = function () {
-        return {
-            modules: {},
-            create: function (moduleName) {
-                if (!this.modules[moduleName]) {
-                    this.modules[moduleName] = {};
-                }
-                return this.modules[moduleName];
-            },
-            get: function (moduleName) {
-                return this.modules[moduleName];
-            },
-            update: function (moduleName, module) {
-                this.modules[moduleName] = module;
-            },
-            destroy: function (moduleName) {
-                if (this.modules[moduleName]) {
-                    delete this.modules[moduleName];
-                }
-            },
-        };
-    };
-    var cleanupNode = function (node) {
-        if (node) {
-            // setTimeout(function () {
-            // $.event.remove(node);
-            // node.removeData();
-            // node.html('');
-            // node[0].parentNode.removeChild(node[0]);
-            // node.html('');
-            // node.empty();
-
-            node.html('');
-            node.remove();
-            // }, 0);
-        }
-    };
+!function (global, $, _, angular, undefined) {
 
     var buildModule = function (name) {
-        var module = {};
-        var moduleRegistry = moduleRegistryBuilder();
-
-        module['__meta__'] = {
-            name: name,
-        };
-        module['__modules__'] = moduleRegistry;
-
-        module.importModule = function (moduleName) {
-            var m = moduleRegistry.get(moduleName);
-            return m;
-        };
-        module.registerModule = function (moduleName, moduleInitFn) {
-            var moduleInit = moduleInitFn;
-            var childModule = moduleRegistry.get(moduleName);
-            if (!childModule) {
-                childModule = buildModule(moduleName);
-                childModule.destruct = function () {
-                    if (childModule.dispose) {
-                        childModule.dispose();
-                    }
-                    moduleRegistry.destroy(moduleName);
-                    childModule = null;
-                };
-                // this[moduleName] = module;
-                moduleInit(childModule);
-                moduleInit = null;
-                moduleRegistry.update(moduleName, childModule);
-            }
-            return childModule;
-        };
-        module.apps = {};
-        var buildApp = function (appName, appParams) {
-            var app = {};
-            var appNode = null;
-            app.moduleName = module['__meta__'].name;
-            app.name = appName;
-            app.params = (appParams != undefined) ? appParams : {};
-            app.startAngular = function (appNodeId, appController) {
-                appNode = $('#' + appNodeId);
-                var injector = angular.injector(['ng', 'rootApp']);
-                var tabAppBuilder = injector.get('tabAppBuilder');
-                tabAppBuilder.buildTabApp(app, appNode, appController);
-            };
-            app.cleanup = function () {
-                if (app.angularScope) {
-
-                    app.dispose();
-                    app.angularScope.$destroy();
-
-                    cleanupNode(app.angularElem);
-                    cleanupNode(appNode);
-
-                    app.angularElem = null;
-                    app.angularScope = null;
-
-                } else if (app.angularApp) {
-                    app.dispose();
-
-                    var rootScope = app.angularApp.get('$rootScope');
-                    rootScope.$destroy();
-
-                    appNode.appendTo('#angular-trash-container');
-                    cleanupNode(appNode);
-
-                } else {
-                    cleanupNode(appNode);
-                    app.dispose();
+        var module = {
+            '__meta__': {
+                name: name,
+            },
+            modules: {},
+            importModule: function (moduleName) {
+                var m = this.modules[moduleName];
+                return m;
+            },
+            registerModule: function (moduleName, moduleInit) {
+                var childModule = this.modules[moduleName];
+                if (!childModule) {
+                    childModule = buildModule(moduleName);
+                    moduleInit(childModule);
+                    this.modules[moduleName] = childModule;
                 }
-                delete module.apps[appName];
-                app = null;
-                appNode = null;
+            },
+            apps: {},
+            runApp: function (appName, appParams) {
+                if (!this.apps[appName]) {
+                    var app = buildApp(this, appName, appParams);
+                    this.appBuilder(app);
+                    // _.extend(app, this._appTemplate);
+                    this.apps[appName] = app;
+                    app.ready();
+                }
+            },
+        };
+
+        function buildApp(ownerModule, appName, appParams) {
+            var app = {
+                name: appName,
+                params: (appParams != undefined) ? appParams : {},
+                module: ownerModule,
+                node: null,
+                _sub1: null,
+                start: function() {
+                    this.node = $('#' + this.params.nodeId);
+                    this._sub1 = global.importModule('corelib')
+                        .messageHub()
+                        .subscribe('tab-close', this.tabClosed.bind(this));
+                },
+                startAngular: function () {
+                    this.node = $('#' + this.params.nodeId);
+                    var injector = angular.injector(['ng', 'rootApp']);
+                    var tabAppBuilder = injector.get('tabAppBuilder');
+                    tabAppBuilder.buildTabApp(app);
+                    // tabAppBuilder.buildAppScope(app, this.node, appController);
+                },
+                cleanup: function() {
+                    if (this.angularScope) {
+
+                        this.dispose();
+
+                        // cleanupNode(app.angularElem);
+                        cleanupNode(this.node);
+                        this.node = null;
+
+                        this.angularScope.$destroy();
+                        this.angularElem = null;
+
+                    } else if (this.angularApp) {
+                        this.dispose();
+
+                        cleanupNode(this.node);
+                        this.node = null;
+
+                        var rootScope = this.angularApp.get('$rootScope');
+                        rootScope.$destroy();
+                        rootScope = null;
+
+                    } else {
+                        this.dispose();
+                        cleanupNode(this.node);
+                    }
+                    // keep it before 'cleanup' vanish them
+                    var appName = this.name;
+                    var module = this.module;
+
+                    global.importModule('corelib')
+                        .messageHub()
+                        .unsubscribe(this._sub1);
+
+                    // prevent module from cleanup
+                    delete this.module;
+
+                    cleanupObject(this);
+                    delete module.apps[appName];
+                },
+                tabClosed: function (msg) {
+                    this.cleanup();
+                },
             };
             return app;
         };
-        module.runApp = function (appName, appParams) {
-            if (!module.apps[appName]) {
-                var app = buildApp(appName, appParams);
-                module.apps[appName] = app;
-                module.appBuilder(app);
-                app.ready();
+
+        function createModuleRegistry() {
+            return {
+                modules: {},
+                get: function (moduleName) {
+                    return this.modules[moduleName];
+                },
+                update: function (moduleName, module) {
+                    this.modules[moduleName] = module;
+                },
+                destroy: function (moduleName) {
+                    if (this.modules[moduleName]) {
+                        delete this.modules[moduleName];
+                    }
+                },
+            };
+        }
+        function cleanupNode(node) {
+            if (node) {
+                // setTimeout(function () {
+                $.event.remove(node);
+                node.removeData();
+                // node.html('');
+                // node[0].parentNode.removeChild(node[0]);
+                // node.html('');
+                // node.empty();
+
+                node.html('');
+                node.remove();
+                // }, 0);
             }
-        };
+        }
+        function cleanupObject(obj) {
+            if (obj) {
+                var keys = Object.keys(obj);
+                for (var ix = 0; ix < keys.length; ix++) {
+                    var pname = keys[ix];
+                    var p = obj[pname];
+                    if (_.isFunction(p)) {
+                        // p.bind(undefined);
+                    } else {
+                        if (_.isObject(p)) {
+                            cleanupObject(p);
+                        }
+                    }
+                    delete obj[pname];
+                }
+            }
+        }
+
         return module;
     };
 
@@ -129,24 +153,32 @@
     _.extend(global, globalModule);
 
 
-    global.registerModule('corelib', function (module) {
+    globalModule.registerModule('corelib', function (module) {
 
-        module.runAsync = function (asyncDesc) {
-            setTimeout(function () {
-                asyncDesc.callback();
-                asyncDesc.callback = null;
-                asyncDesc = null;
-            }, asyncDesc.delay || 0);
+        var AsyncExecutor = function(callback, delay, payload) {
+            this.delay = delay || 0;
+            this.callback = callback;
+            this.payload = payload;
+            this.execute = function () {
+                setTimeout(this.callback, this.delay, this.payload);
+                this.callback = null;
+                this.payload =null;
+            };
         };
+
+        var runAsync = function (callback, delay, payload) {
+            setTimeout(callback, delay, payload);
+        };
+        module.runAsync = runAsync;
 
         var _logRow = 0
         var _logTemplate = _.template('<%=row%>::<%=module%> >> <%=text%>');
         module.log = function (module, text, isError) {
-            var logRow = _.padStart((++_logRow).toString(10), 3, '0')
-            var moduleText = _.padEnd(module, 8, '.')
-            var content = _logTemplate({row: logRow, module: moduleText, text: text})
-            var rowDiv = document.createElement('div')
-            rowDiv.className = 'row'
+            var logRow = _.padStart((++_logRow).toString(10), 3, '0');
+            var moduleText = _.padEnd(module, 8, '.');
+            var content = _logTemplate({row: logRow, module: moduleText, text: text});
+            var rowDiv = document.createElement('div');
+            rowDiv.className = 'row';
             if (isError) {
                 rowDiv.className = 'row error';
             }
@@ -159,53 +191,44 @@
         };
 
         var createMessageHub = function () {
-            var _subscriptions = [];
-
-            var runCallback = function (callback, payload) {
-                setTimeout(() => {
-                    callback(payload);
-                    callback = null;
-                }, 0);
-            };
-            var handleMessage = function (evt) {
-                if (evt.data && typeof evt.data == 'string') {
-                    var msg = JSON.parse(evt.data)
-                    for (var ix = 0; ix < _subscriptions.length; ix++) {
-                        if (_subscriptions[ix].messageType == msg.messageType) {
-                            runCallback(_subscriptions[ix].callback, msg.payload)
+            var _hub = {
+                _subscriptions: [],
+                _handleMessage: function(evt) {
+                    if (evt.data && typeof evt.data == 'string') {
+                        var msg = JSON.parse(evt.data)
+                        for (var ix = 0; ix < this._subscriptions.length; ix++) {
+                            if (this._subscriptions[ix].messageType == msg.messageType) {
+                                runAsync(this._subscriptions[ix].callback, 0, msg.payload);
+                            }
                         }
                     }
-                }
-            };
-            var _hub = {
+                },
                 subscribe: function (messageType, callback) {
                     var sub = {
                         messageType: messageType,
                         callback: callback
                     }
-                    _subscriptions.push(sub)
-                    return sub
+                    this._subscriptions.push(sub);
+                    return sub;
                 },
                 unsubscribe: function (sub) {
-                    var ix = _subscriptions.indexOf(sub)
+                    var ix = this._subscriptions.indexOf(sub);
                     if (ix >= 0) {
-                        _subscriptions[ix].callback = null;
-                        _subscriptions.splice(ix, 1)
+                        delete this._subscriptions[ix].callback;
+                        this._subscriptions.splice(ix, 1);
                     }
                 },
                 broadcast: function (messageType, message) {
-                    window.postMessage(JSON.stringify({
+                    global.postMessage(JSON.stringify({
                         messageType: messageType,
                         payload: message
-                    }), window.location.origin);
+                    }), global.location.origin);
                 },
                 start: function () {
-                    window.addEventListener('message', function (evt) {
-                        handleMessage(evt)
-                    });
-                    return _hub;
-                }
-            }
+                    global.addEventListener('message', this._handleMessage.bind(this));
+                    return this;
+                },
+            };
             return _hub;
         };
         var _messageHub = createMessageHub().start();
@@ -217,19 +240,16 @@
                 bundles: {},
             };
             _loader.loadBundle = function (bundleName, bundlerUrls, loadedCallback) {
-                var cb = loadedCallback;
                 if (!_loader.bundles[bundleName]) {
                     loadjs(bundlerUrls, bundleName);
-                    loadjs.ready(bundleName, function jsReady() {
+                    loadjs.ready(bundleName, () => {
                         _loader.bundles[bundleName] = {
                             loaded: true,
                         };
-                        cb();
-                        cb = null;
+                        loadedCallback();
                     });
                 } else {
-                    cb();
-                    cb = null;
+                    loadedCallback();
                 }
             };
             _loader.isLoaded = function (bundleName) {
@@ -245,58 +265,6 @@
         module.jsLoader = function () {
             return _jsLoader;
         };
-        module.AsyncChain = function () {
-            var that = this;
-            var _callbacks = [];
-
-            var asyncExecute = function (callback, callbackIterator, onComplete) {
-                !function (cb, cbIter, completed) {
-                    setTimeout(function () {
-                        cb.callback();
-                        var nextCallback = cbIter.next();
-                        if (nextCallback) {
-                            asyncExecute(nextCallback, cbIter, completed);
-                        } else {
-                            completed();
-                        }
-                    }, cb.delay);
-                }(callback, callbackIterator, onComplete);
-            };
-            that.addAsyncAction = function (actionCallback, actionDelay) {
-                _callbacks.push({
-                    callback: actionCallback,
-                    delay: actionDelay,
-                });
-            };
-            that.execute = function () {
-                if (_callbacks.length > 0) {
-                    var callbackIterator = {
-                        callbacks: _callbacks,
-                        maxIndex: _callbacks.length,
-                        index: 0,
-                        next: function () {
-                            this.index++;
-                            if (this.index < this.maxIndex) {
-                                return this.callbacks[this.index];
-                            } else {
-                                return null;
-                            }
-                        },
-                        dispose: function () {
-                            this.callbacks = [];
-                        },
-                    };
-                    asyncExecute(_callbacks[0], callbackIterator, function () {
-                        _callbacks.forEach(function (c) {
-                            c.callback = null;
-                        });
-                        _callbacks = [];
-                        callbackIterator.dispose();
-                        callbackIterator = null;
-                    });
-                }
-            };
-        };
         module.loadTabApp = function (tabModule, tabScripts, tabId, tabNodeId) {
             var moduleName = tabModule;
             var bundleName = moduleName + '_js';
@@ -304,12 +272,15 @@
             var appParams = {nodeId: tabNodeId};
 
             if (!_jsLoader.isLoaded(bundleName)) {
-                _jsLoader.loadBundle(bundleName, tabScripts, function handleTabLoad() {
-                    importModule(moduleName).runApp(appId, appParams);
+                _jsLoader.loadBundle(bundleName, tabScripts, () => {
+                    globalModule.importModule(moduleName).runApp(appId, appParams);
                 });
             } else {
-                importModule(moduleName).runApp(appId, appParams);
+                runAsync(() => {
+                    globalModule.importModule(moduleName).runApp(appId, appParams);
+                });
             }
         };
     });
-}(this);
+
+}(this, $, _, angular);
