@@ -18,23 +18,26 @@
                     this.modules[moduleName] = childModule;
                 }
             },
+            extendModule: function(moduleName, moduleExtend) {
+                var childModule = this.modules[moduleName];
+                moduleExtend(childModule);
+            },
             apps: {},
             runApp: function (appName, appParams) {
                 if (!this.apps[appName]) {
-                    var app = buildApp(this, appName, appParams);
-                    this.appBuilder(app);
+                    this.apps[appName] = buildApp({ ref: this }, appName, appParams);
+                    this.appBuilder({ ref: this.apps[appName] });
                     // _.extend(app, this._appTemplate);
-                    this.apps[appName] = app;
-                    app.ready();
+                    this.apps[appName].ready();
                 }
             },
         };
 
-        function buildApp(ownerModule, appName, appParams) {
+        function buildApp(moduleRef, appName, appParams) {
             var app = {
                 name: appName,
                 params: (appParams != undefined) ? appParams : {},
-                module: ownerModule,
+                module: moduleRef.ref,
                 node: null,
                 _sub1: null,
                 start: function() {
@@ -44,11 +47,21 @@
                         .subscribe('tab-close', this.tabClosed.bind(this));
                 },
                 startAngular: function () {
-                    this.node = $('#' + this.params.nodeId);
-                    var injector = angular.injector(['ng', 'rootApp']);
-                    var tabAppBuilder = injector.get('tabAppBuilder');
-                    tabAppBuilder.buildTabApp(app);
-                    // tabAppBuilder.buildAppScope(app, this.node, appController);
+                    if (this.params.isFrame) {
+                        this.node = $('#' + this.params.nodeId);
+                        global.importModule('tabs').renderTab(this);
+                    } else {
+                        this.node = $('#' + this.params.nodeId);
+                        var injector = angular.injector(['ng', 'rootApp']);
+                        var tabAppBuilder = injector.get('tabAppBuilder');
+                        tabAppBuilder.buildTabApp(app);
+                        // tabAppBuilder.buildAppScope(app, this.node, appController);
+                    }
+
+                    this._sub1 = global.importModule('corelib')
+                        .messageHub()
+                        .subscribe('tab-close', this.tabClosed.bind(this));
+
                 },
                 cleanup: function() {
                     if (this.angularScope) {
@@ -97,22 +110,6 @@
             return app;
         };
 
-        function createModuleRegistry() {
-            return {
-                modules: {},
-                get: function (moduleName) {
-                    return this.modules[moduleName];
-                },
-                update: function (moduleName, module) {
-                    this.modules[moduleName] = module;
-                },
-                destroy: function (moduleName) {
-                    if (this.modules[moduleName]) {
-                        delete this.modules[moduleName];
-                    }
-                },
-            };
-        }
         function cleanupNode(node) {
             if (node) {
                 // setTimeout(function () {
@@ -190,6 +187,15 @@
             _logRow = 0;
         };
 
+        var getMessageWindow = function () {
+            // if (window.opener) {
+            //     return window.opener;
+            // }
+            // if (window.parent) {
+            //     return window.parent;
+            // }
+            return window;
+        };
         var createMessageHub = function () {
             var _hub = {
                 _subscriptions: [],
@@ -219,13 +225,13 @@
                     }
                 },
                 broadcast: function (messageType, message) {
-                    global.postMessage(JSON.stringify({
+                    getMessageWindow().postMessage(JSON.stringify({
                         messageType: messageType,
                         payload: message
                     }), global.location.origin);
                 },
                 start: function () {
-                    global.addEventListener('message', this._handleMessage.bind(this));
+                    getMessageWindow().addEventListener('message', this._handleMessage.bind(this));
                     return this;
                 },
             };
@@ -265,14 +271,14 @@
         module.jsLoader = function () {
             return _jsLoader;
         };
-        module.loadTabApp = function (tabModule, tabScripts, tabId, tabNodeId) {
-            var moduleName = tabModule;
+        module.loadTabApp = function (payload) {
+            var moduleName = payload.tabModule;
             var bundleName = moduleName + '_js';
-            var appId = tabId;
-            var appParams = {nodeId: tabNodeId};
+            var appId = payload.tabId;
+            var appParams = { nodeId: payload.tabNode, isFrame: payload.tabFrame };
 
             if (!_jsLoader.isLoaded(bundleName)) {
-                _jsLoader.loadBundle(bundleName, tabScripts, () => {
+                _jsLoader.loadBundle(bundleName, payload.tabScripts, () => {
                     globalModule.importModule(moduleName).runApp(appId, appParams);
                 });
             } else {

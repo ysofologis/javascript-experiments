@@ -20,14 +20,16 @@
     </div>
 
     <script type="text/javascript">
-        // importModule('corelib').loadTabApp('anglr01_module', ['tabs/tab1/content.js'], '<%= tabId %>', '<%= tabNode %>');
-        window.postMessage(JSON.stringify({
+        // var messageWnd = window.opener ? window.opener : (window.parent ? window.parent : window);
+        var messageWnd = window;
+        messageWnd.postMessage(JSON.stringify({
             messageType: 'tab-start',
             payload: {
                 tabModule: 'anglr01_module',
                 tabScripts: ['tabs/anglr01/content.js'],
                 tabId: '<%= tabId %>',
                 tabNode: '<%= tabNode %>',
+                tabFrame: (window.parent || window.opener ) ? true: false,
             },
         }), window.location.origin);
     </script>

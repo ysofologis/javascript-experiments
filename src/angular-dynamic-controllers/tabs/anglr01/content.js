@@ -1,10 +1,8 @@
 registerModule('anglr01_module', function (module) {
     var corelib = importModule('corelib');
-    module.appBuilder = function (app) {
 
-        var appId = app.name;
-        var tabNodeId = app.params.nodeId;
-
+    module.appBuilder = function (appRef) {
+        var app = appRef.ref;
         app.scopeBuilder = {
             build: function (injector, scope) {
                 scope.message = 'Hello from ' + app.name + ' !!';
@@ -26,12 +24,12 @@ registerModule('anglr01_module', function (module) {
         };
 
         app.ready = function () {
-            app.startAngular(tabNodeId);
-            corelib.log('tabs', 'tab ' + appId + ' started');
+            app.startAngular();
+            corelib.log('tabs', 'tab ' + app.name + ' started');
         };
 
         app.dispose = function () {
-            corelib.log('tabs', 'tab ' + appId + ' disposed');
+            corelib.log('tabs', 'tab ' + app.name + ' disposed');
             app = null;
         };
     };

@@ -2,14 +2,14 @@ registerModule('theApp', function (module) {
     var tabs = importModule('tabs');
     var corelib = importModule('corelib');
 
-    var doLoadTab = function (tabName) {
+    var doLoadTab = function (tabName, asIframe) {
         corelib.runAsync(() => {
-            tabs.loadTab(tabName);
+            tabs.loadTab(tabName, asIframe);
         });
     };
 
     var sub1 = corelib.messageHub().subscribe('tab-start', function (payload) {
-        corelib.loadTabApp(payload.tabModule, payload.tabScripts, payload.tabId, payload.tabNode);
+        corelib.loadTabApp(payload);
     });
 
     module.start = function () {
@@ -17,8 +17,8 @@ registerModule('theApp', function (module) {
         var ngApp = angular.module('rootApp', [])
             .factory('tabLauncher', function () {
                 return {
-                    loadTab: function (tabName) {
-                        doLoadTab(tabName);
+                    loadTab: function (tabName, asIframe) {
+                        doLoadTab(tabName, asIframe);
                     },
                     closeAll: function () {
                         corelib.messageHub().broadcast('tab-close', {});
@@ -29,8 +29,8 @@ registerModule('theApp', function (module) {
 
                 $scope.title = 'This is supposed to be the main menu';
                 $scope.menuItems = [];
-                $scope.loadTab = function (tabName) {
-                    tabLauncher.loadTab(tabName);
+                $scope.loadTab = function (tabName, asIframe) {
+                    tabLauncher.loadTab(tabName, asIframe);
                 };
                 $scope.loadTabs = function (tabName, howMany) {
                     for (var ix = 0; ix < howMany; ix++) {
@@ -48,11 +48,10 @@ registerModule('theApp', function (module) {
                     corelib.clearLog();
                 };
             });
-        tabs.initTabs(ngApp);
+        tabs.initTabContainer(ngApp);
         var rootApp = $('#app');
         angular.bootstrap(rootApp[0], ['rootApp']);
         corelib.log('app', 'started');
-        // doLoadTab('anglr01');
     };
     module.dispose = function () {
         corelib.messageHub().unsubscribe(sub1);

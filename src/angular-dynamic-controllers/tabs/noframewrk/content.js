@@ -2,7 +2,8 @@
 registerModule('noframewrk_module', function (module) {
     var corelib = importModule('corelib');
 
-    module.appBuilder = function (app) {
+    module.appBuilder = function (appRef) {
+        var app = appRef.ref;
         var btnSelector = $( '#' + app.params.nodeId + ' .btn-close');
         var appId = app.name;
 
@@ -37,6 +38,7 @@ registerModule('noframewrk_module', function (module) {
 
             corelib.log('tabs', 'tab ' + appId + ' disposed');
             app = null;
+            appId = null;
         };
     };
 });
