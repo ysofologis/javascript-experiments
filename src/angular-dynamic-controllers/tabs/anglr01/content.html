@@ -20,8 +20,8 @@
     </div>
 
     <script type="text/javascript">
-        // var messageWnd = window.opener ? window.opener : (window.parent ? window.parent : window);
-        var messageWnd = window;
+        var messageWnd = window.parent ? window.parent : window;
+        // var messageWnd = window;
         messageWnd.postMessage(JSON.stringify({
             messageType: 'tab-start',
             payload: {
@@ -29,7 +29,7 @@
                 tabScripts: ['tabs/anglr01/content.js'],
                 tabId: '<%= tabId %>',
                 tabNode: '<%= tabNode %>',
-                tabFrame: (window.parent || window.opener ) ? true: false,
+                tabFrame: (window.parent != window) ? true: false,
             },
         }), window.location.origin);
     </script>

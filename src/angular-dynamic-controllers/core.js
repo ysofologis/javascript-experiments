@@ -47,17 +47,15 @@
                         .subscribe('tab-close', this.tabClosed.bind(this));
                 },
                 startAngular: function () {
+                    this.node = $('#' + this.params.nodeId);
                     if (this.params.isFrame) {
-                        this.node = $('#' + this.params.nodeId);
-                        global.importModule('tabs').renderTab(this);
+                        global.importModule('tabs').renderTab(app);
                     } else {
-                        this.node = $('#' + this.params.nodeId);
                         var injector = angular.injector(['ng', 'rootApp']);
                         var tabAppBuilder = injector.get('tabAppBuilder');
                         tabAppBuilder.buildTabApp(app);
-                        // tabAppBuilder.buildAppScope(app, this.node, appController);
                     }
-
+                    // tabAppBuilder.buildAppScope(app, this.node, appController);
                     this._sub1 = global.importModule('corelib')
                         .messageHub()
                         .subscribe('tab-close', this.tabClosed.bind(this));
@@ -100,8 +98,17 @@
                     // prevent module from cleanup
                     delete this.module;
 
+                    var frameId = this.params.frameId;
                     cleanupObject(this);
                     delete module.apps[appName];
+
+                    if (frameId) {
+                        global.importModule('corelib')
+                            .messageHub()
+                            .broadcast('remove-frame', {
+                                frameId: frameId,
+                            });
+                    }
                 },
                 tabClosed: function (msg) {
                     this.cleanup();
@@ -188,12 +195,12 @@
         };
 
         var getMessageWindow = function () {
-            // if (window.opener) {
-            //     return window.opener;
-            // }
-            // if (window.parent) {
-            //     return window.parent;
-            // }
+            if (window.opener) {
+                return window.opener;
+            }
+            if (window.parent) {
+                return window.parent;
+            }
             return window;
         };
         var createMessageHub = function () {
@@ -275,16 +282,20 @@
             var moduleName = payload.tabModule;
             var bundleName = moduleName + '_js';
             var appId = payload.tabId;
-            var appParams = { nodeId: payload.tabNode, isFrame: payload.tabFrame };
+            var appParams = { nodeId: payload.tabNode, isFrame: payload.isFrame || false };
 
-            if (!_jsLoader.isLoaded(bundleName)) {
-                _jsLoader.loadBundle(bundleName, payload.tabScripts, () => {
-                    globalModule.importModule(moduleName).runApp(appId, appParams);
-                });
+            if (payload.tabFrame) {
+                payload.tabFrame = false;
+                payload.isFrame = true;
+                module.messageHub().broadcast('app-start', payload);
             } else {
-                runAsync(() => {
+                if (!_jsLoader.isLoaded(bundleName)) {
+                    _jsLoader.loadBundle(bundleName, payload.tabScripts, () => {
+                        globalModule.importModule(moduleName).runApp(appId, appParams);
+                    });
+                } else {
                     globalModule.importModule(moduleName).runApp(appId, appParams);
-                });
+                }
             }
         };
     });

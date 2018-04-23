@@ -10,7 +10,17 @@
     <script src="core.js"></script>
     <script src="tabs.js"></script>
 </head>
-<body>
-    <%= tabContent %>
+<body onunload="frameUnload()">
+<%= tabContent %>
 </body>
+<script type="text/javascript">
+    var corelib = importModule('corelib');
+    var sub1 = corelib.messageHub()
+        .subscribe('app-start', function (payload) {
+            corelib.loadTabApp(payload);
+        });
+    // var frameUnload = function () {
+    //     corelib.messageHub().unsubscribe(sub1);
+    // };
+</script>
 </html>

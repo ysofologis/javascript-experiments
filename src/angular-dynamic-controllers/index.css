@@ -52,6 +52,12 @@ html, body {
     width: 80px;
 }
 
+#app .tab-container .tab-frame {
+    width: 100%;
+    height: 50px;
+    border: solid 1px #aaa;
+    margin-top: 5px;
+}
 
 #app .log {
     clear: both;

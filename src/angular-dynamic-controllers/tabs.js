@@ -20,6 +20,7 @@
                         scopeBuilder = null;
                     }]);
             if (app.params.isFrame) {
+                app.params.frameId = window.name;
                 var rootElem = angular.element(document.body);
                 tabNode.find('.tab-controller').attr({'ng-controller': ctrlName});
                 app.angularApp = angular.bootstrap(rootElem, [appName]);
@@ -105,6 +106,11 @@
                     var fn = _.template(templateContent);
                     var frameHtml = fn({ tabContent: tabContent });
                     var ifrm = global.document.createElement("iframe");
+                    ifrm.name = 'frm-' + tabName + "-" + tabId;
+                    ifrm.id = ifrm.name;
+                    ifrm.className = 'tab-frame';
+                    ifrm.frameBorder = '0';
+
                     tabContainer.append(ifrm);
                     var frameDoc = ifrm.contentWindow || ifrm.contentDocument.document || ifrm.contentDocument;
                     frameDoc.document.open();
@@ -114,6 +120,8 @@
                     tabContainer = null;
                     tabContent = null;
                     context = null;
+                    frameDoc = null;
+                    ifrm = null;
                 });
             } else {
                 tabContainer.append(tabContent);

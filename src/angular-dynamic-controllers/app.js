@@ -11,6 +11,14 @@ registerModule('theApp', function (module) {
     var sub1 = corelib.messageHub().subscribe('tab-start', function (payload) {
         corelib.loadTabApp(payload);
     });
+    var sub2 = corelib.messageHub().subscribe('remove-frame', function (payload) {
+        var frameSelector = $('#' + payload.frameId);
+        frameSelector.contents().find('body').empty();
+        frameSelector[0].src = 'about:blank';
+        frameSelector[0].innerHTML = '';
+        frameSelector.remove();
+        frameSelector = null;
+    });
 
     module.start = function () {
 
@@ -55,5 +63,6 @@ registerModule('theApp', function (module) {
     };
     module.dispose = function () {
         corelib.messageHub().unsubscribe(sub1);
+        corelib.messageHub().unsubscribe(sub2);
     };
 });
